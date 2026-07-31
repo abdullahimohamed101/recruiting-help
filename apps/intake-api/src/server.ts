@@ -3,7 +3,6 @@ import {
   type IncomingMessage,
   type ServerResponse,
 } from "node:http";
-import { SourceTypeSchema, type SourceType } from "@recruiting-help/contracts";
 import {
   createDatabasePool,
   persistSignedRawEvent,
@@ -13,84 +12,8 @@ import {
   DEFAULT_MAX_BODY_BYTES,
   IntakeRequestError,
   publicFailure,
-  type CallerRegistry,
 } from "@recruiting-help/ingestion";
-
-type ExternalCallerConfig = {
-  secret?: unknown;
-  allowed_sources?: unknown;
-};
-
-function loadCallerRegistry(environment: NodeJS.ProcessEnv): CallerRegistry {
-  let serialized = environment.AGGREGATOR_CALLERS_JSON;
-  if (serialized === undefined) {
-    const callerId = environment.AGGREGATOR_CALLER_ID;
-    const secret = environment.AGGREGATOR_CALLER_SECRET;
-    const allowedSources = environment.AGGREGATOR_ALLOWED_SOURCES_JSON;
-    if (
-      callerId === undefined ||
-      secret === undefined ||
-      allowedSources === undefined
-    ) {
-      throw new Error(
-        "Provide AGGREGATOR_CALLERS_JSON or the complete single-caller development configuration.",
-      );
-    }
-    serialized = JSON.stringify({
-      [callerId]: {
-        secret,
-        allowed_sources: JSON.parse(allowedSources) as unknown,
-      },
-    });
-  }
-
-  const parsed: unknown = JSON.parse(serialized);
-  if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed)) {
-    throw new Error("AGGREGATOR_CALLERS_JSON must be a JSON object.");
-  }
-
-  const callers: Record<
-    string,
-    { secret: string; allowedSources: Partial<Record<SourceType, string[]>> }
-  > = {};
-  for (const [callerId, unvalidatedConfig] of Object.entries(parsed)) {
-    const config = unvalidatedConfig as ExternalCallerConfig;
-    if (typeof config.secret !== "string" || config.secret.length < 32) {
-      throw new Error(
-        `Caller ${callerId} must have a secret of at least 32 characters.`,
-      );
-    }
-    if (
-      config.allowed_sources === null ||
-      typeof config.allowed_sources !== "object" ||
-      Array.isArray(config.allowed_sources)
-    ) {
-      throw new Error(`Caller ${callerId} must define allowed_sources.`);
-    }
-
-    const allowedSources: Partial<Record<SourceType, string[]>> = {};
-    for (const [unvalidatedSource, unvalidatedAccounts] of Object.entries(
-      config.allowed_sources,
-    )) {
-      const source = SourceTypeSchema.parse(unvalidatedSource);
-      if (
-        !Array.isArray(unvalidatedAccounts) ||
-        unvalidatedAccounts.some(
-          (account) => typeof account !== "string" || account.length === 0,
-        )
-      ) {
-        throw new Error(
-          `Caller ${callerId} source ${source} must contain account strings.`,
-        );
-      }
-      allowedSources[source] = unvalidatedAccounts as string[];
-    }
-
-    callers[callerId] = { secret: config.secret, allowedSources };
-  }
-
-  return callers;
-}
+import { loadCallerRegistry } from "./callers.js";
 
 async function readBody(request: IncomingMessage): Promise<Buffer> {
   const chunks: Buffer[] = [];
@@ -132,6 +55,13 @@ if (connectionString === undefined || connectionString.length === 0) {
 }
 
 const callers = loadCallerRegistry(process.env);
+console.log(
+  JSON.stringify({
+    level: "info",
+    event: "intake_callers_loaded",
+    caller_ids: Object.keys(callers).sort(),
+  }),
+);
 const pool = createDatabasePool(connectionString);
 const processIntake = createIntakeProcessor({
   callers,

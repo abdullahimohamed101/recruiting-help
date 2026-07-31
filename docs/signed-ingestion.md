@@ -93,7 +93,11 @@ Place the generated value in:
 AGGREGATOR_CALLER_SECRET=...
 ```
 
-The development Compose file contains a clearly marked local-only caller fixture so the containerized smoke test is reproducible. Production has no default secret and requires `AGGREGATOR_CALLERS_JSON`.
+Development Compose does **not** pass `AGGREGATOR_CALLERS_JSON` into `intake-api`
+(Compose strips quotes from JSON in `.env`). Instead it passes scalar
+`AGGREGATOR_CALLER_SECRET` and `DISCORD_GUILD_ID`; `intake-api` builds the local
+`collector-dev` + `discord-bot-dev` registry in-process. Production still
+requires `AGGREGATOR_CALLERS_JSON`.
 
 Start services and migrate:
 

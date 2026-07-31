@@ -46,6 +46,9 @@ Required for `corepack pnpm bot:dev` or Compose `--profile discord`:
 - `INTAKE_URL` (Compose pins the bot to WF-02: `http://n8n:5678/webhook/unified-intake`; do not reuse the host `127.0.0.1` CLI value inside the bot container)
 - `AGGREGATOR_CALLER_ID` / `AGGREGATOR_CALLER_SECRET`
 
+Do not set `AGGREGATOR_CALLERS_JSON` in `.env` for Compose; `intake-api` builds the
+local allow-list from `AGGREGATOR_CALLER_SECRET` + `DISCORD_GUILD_ID`.
+
 Allow-list the bot caller for:
 
 - `discord_manual` → owned guild ID
