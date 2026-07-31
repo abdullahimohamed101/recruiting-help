@@ -149,6 +149,27 @@ describe("deterministic extraction", () => {
     expect(result?.candidate.locations).toEqual([]);
     expect(reviewReasonsForCandidate(result!.candidate, 0.85)).toEqual([]);
   });
+
+  it("keeps lowercase Rippling path tokens as company evidence", () => {
+    const event = makeEvent(
+      "https://ats.rippling.com/rippling/jobs/82c13e8f-ae96-4c60-a872-c0ddf9eb0781?jobSite=LinkedIn",
+    );
+    event.source = "discord_manual";
+    event.source_account = "222";
+    event.metadata = {
+      guild_id: "222",
+      channel_id: "333",
+      message_id: "444",
+      forwarded: false,
+    };
+    const result = extractDeterministically(event);
+    expect(result?.candidate.company).toBe("Rippling");
+    expect(result?.candidate.role).toBeNull();
+    expect(result?.candidate.evidence.company).toBe("rippling");
+    expect(validateCandidateEvidence(event, result!.candidate).valid).toBe(
+      true,
+    );
+  });
 });
 
 describe("relevance fixtures", () => {

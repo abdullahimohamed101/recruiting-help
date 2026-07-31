@@ -287,6 +287,9 @@ async function routeToReview(
   },
 ): Promise<ProcessNextEventResult> {
   const opportunity = minimalReviewOpportunity(work, input.candidate ?? null);
+  const excerpt =
+    opportunity.descriptionExcerpt ??
+    ((work.event.text ?? "").trim().slice(0, 500) || null);
   const persisted = await persistReviewOpportunity(pool, {
     rawEventId: work.rawEventId,
     processingRunId: work.processingRunId,
@@ -298,7 +301,7 @@ async function routeToReview(
     outboxPayload: buildReviewOutboxPayload({
       opportunity,
       reviewReasons: input.reviewReasons,
-      excerpt: opportunity.descriptionExcerpt,
+      excerpt,
     }),
   });
   return {
@@ -372,9 +375,18 @@ export async function processWorkItem(
   try {
     // Trusted ATS/job-page fetch (SSRF-safe). Model still has no network access;
     // posting title/company/location become part of the event source text.
-    const { event: enrichedEvent } = await enrichRawEventWithJobPages(
-      work.event,
-    );
+    const { event: enrichedEvent, enrichedUrls } =
+      await enrichRawEventWithJobPages(work.event);
+    if (enrichedUrls.length > 0) {
+      console.info(
+        JSON.stringify({
+          level: "info",
+          event: "job_page_enriched",
+          raw_event_id: work.rawEventId,
+          urls: enrichedUrls,
+        }),
+      );
+    }
     const extraction = await extractOpportunity(enrichedEvent, provider);
     if (extraction.kind === "ignored") {
       const audit = auditFromExtraction({
