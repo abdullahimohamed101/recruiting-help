@@ -69,6 +69,7 @@ review:
   missing_role: true
   missing_application_url: true
   ambiguous_year: false
+  # Only when locations are present but unclear. Empty location (link-drop) is allowed.
   ambiguous_geography: true
   fuzzy_duplicate: true
   minimum_auto_publish_confidence: 0.85
