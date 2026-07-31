@@ -70,16 +70,21 @@ Private Docker network only:
 6. Submit an incomplete item.
 7. Confirm it appears in `#aggregator-review`, not the feed.
 
-URL-only pastes are accepted into intake (`✅`) but usually land in **review**, not the feed, because location is missing. For a feed post, paste structured text:
+URL-only pastes are first-class. Drop a job link (Ashby, SmartRecruiters, Lever,
+Greenhouse, etc.) and the bot will store it; processing fills company/role/season/year
+from the URL when possible and can publish to the feed without a location. Extra
+context is optional:
 
 ```text
-Company: Western Digital
-Role: Summer 2026 Intern, IT Software Engineering
-Location: Remote US
-Apply: https://jobs.smartrecruiters.com/WesternDigital/...
+https://jobs.smartrecruiters.com/WesternDigital/...
+
+# or with hints:
+Remote US — Western Digital SWE intern
+https://jobs.smartrecruiters.com/WesternDigital/...
 ```
 
-Then ensure WF-03 and WF-04 are published (or run `corepack pnpm process:events -- --limit 10`).
+Incomplete links (no parseable company/role) go to `#aggregator-review`. Ensure WF-03
+and WF-04 are published (or run `corepack pnpm process:events -- --limit 10`).
 
 ## Local commands
 

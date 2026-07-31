@@ -131,15 +131,23 @@ describe("deterministic extraction", () => {
     expect(result?.candidate.application_url).toBeNull();
     expect(result?.candidate.locations).toEqual([]);
     expect(reviewReasonsForCandidate(result!.candidate, 0.85)).toEqual(
-      expect.arrayContaining([
-        "missing_application_url",
-        "ambiguous_geography",
-        "low_confidence",
-      ]),
+      expect.arrayContaining(["missing_application_url", "low_confidence"]),
+    );
+    expect(reviewReasonsForCandidate(result!.candidate, 0.85)).not.toContain(
+      "ambiguous_geography",
     );
     expect(reviewReasonsForCandidate(result!.candidate, 0.85)).not.toContain(
       "ambiguous_year",
     );
+  });
+
+  it("lets ATS link-drops publish without a location", () => {
+    const event = makeEvent(
+      "https://jobs.smartrecruiters.com/WesternDigital/744000120516378-summer-2026-intern-it-software-engineering?src=JB-10069",
+    );
+    const result = extractDeterministically(event);
+    expect(result?.candidate.locations).toEqual([]);
+    expect(reviewReasonsForCandidate(result!.candidate, 0.85)).toEqual([]);
   });
 });
 

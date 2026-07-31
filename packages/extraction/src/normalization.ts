@@ -67,7 +67,12 @@ export function reviewReasonsForCandidate(
   if (candidate.application_url === null) {
     reasons.add("missing_application_url");
   }
-  if (locationDisposition(candidate.locations) === "ambiguous") {
+  // Missing location is allowed for link-drop intake; only flag geography when
+  // locations were provided but are still ambiguous (e.g. "EMEA / Remote").
+  if (
+    candidate.locations.length > 0 &&
+    locationDisposition(candidate.locations) === "ambiguous"
+  ) {
     reasons.add("ambiguous_geography");
   }
   if (candidate.confidence < minimumConfidence) {
