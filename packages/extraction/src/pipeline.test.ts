@@ -137,9 +137,14 @@ describe("relevance fixtures", () => {
     ["Principal engineering role", "irrelevant"],
     ["Hackathon registration", "irrelevant"],
     ["Applications open https://example.com", "ambiguous"],
-    ["2027 SWE internship https://example.com", "relevant"],
+    ["2027 SWE internship https://example.com", "ambiguous"],
     ["Staff manager careers", "irrelevant"],
     ["Intern hiring", "ambiguous"],
+    ["https://jobs.ashbyhq.com/Deepgram/abc", "ambiguous"],
+    [
+      "https://www.fandango.com/indianapolis_in_movietimes?date=2026-09-06",
+      "irrelevant",
+    ],
     ["Campus event", "irrelevant"],
   ])("classifies %s as %s", (text, disposition) => {
     expect(classifyRelevance(makeEvent(text)).disposition).toBe(disposition);
