@@ -17,7 +17,9 @@ const ripplingHtml = `<!doctype html><html><head>
   "@context": "https://schema.org",
   "@type": "JobPosting",
   title: "Machine Learning Software Engineer Intern - Winter 2027",
-  description: "<p>About the Role</p><p>Join the Machine Learning Team.</p>",
+  description:
+    "<p>About the Role</p><p>At Rippling, Engineering is at the heart of our business and culture.</p>",
+  datePosted: "2026-05-13T09:44:09.324000+00:00",
   hiringOrganization: { "@type": "Organization", name: "Rippling" },
   jobLocation: {
     "@type": "Place",
@@ -64,6 +66,7 @@ describe("parseJobPageHtml", () => {
       locations: ["San Francisco, CA"],
     });
     expect(page.descriptionText).toContain("About the Role");
+    expect(page.postedAt).toBe("2026-05-13T09:44:09.324Z");
   });
 });
 
@@ -104,7 +107,11 @@ describe("enrichRawEventWithJobPages", () => {
       season: "winter",
       year: 2027,
       employment_type: "internship",
+      posted_at: "2026-05-13T00:00:00.000Z",
     });
+    expect(extracted?.candidate.description_excerpt).toContain(
+      "At Rippling, Engineering is at the heart",
+    );
     expect(reviewReasonsForCandidate(extracted!.candidate, 0.85)).toEqual([]);
   });
 
@@ -131,6 +138,8 @@ describe("formatJobPageSnapshot", () => {
           role: "Intern",
           locations: ["Remote US"],
           descriptionText: null,
+          postedAt: "2026-05-13T00:00:00.000Z",
+          workMode: "Remote",
         },
         "https://ats.rippling.com/rippling/jobs/abc",
       ),

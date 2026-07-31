@@ -89,9 +89,12 @@ export async function deliverOutboxBatch(input: {
             year: asNumber(payload.year),
             employmentType: asString(payload.employment_type),
             categoryLabel: asString(payload.category_label),
+            workMode: asString(payload.work_mode),
             sponsorshipStatus: asString(payload.sponsorship_status),
             applicationUrl: asString(payload.application_url),
             deadline: asString(payload.deadline),
+            postedAt: asString(payload.posted_at),
+            descriptionExcerpt: asString(payload.description_excerpt),
             sourceUrl: asString(payload.source_url),
             confidence: asNumber(payload.confidence),
           });

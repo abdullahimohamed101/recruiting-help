@@ -8,6 +8,7 @@ import {
   isPublicIpAddress,
   pinnedLookup,
 } from "./urls.js";
+import { inferWorkMode, oneLineExcerpt } from "./work-mode.js";
 
 const MAX_BODY_BYTES = 512 * 1024;
 const MAX_PAGES = 2;
@@ -33,6 +34,8 @@ export type ParsedJobPage = {
   role: string | null;
   locations: string[];
   descriptionText: string | null;
+  postedAt: string | null;
+  workMode: string | null;
 };
 
 const defaultFetchRequest: JobPageFetchRequest = (
@@ -224,6 +227,8 @@ function parseJsonLdJobPosting(html: string): {
   role: string | null;
   locations: string[];
   descriptionText: string | null;
+  postedAt: string | null;
+  workMode: string | null;
 } | null {
   for (const match of html.matchAll(
     /<script\b[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/giu,
@@ -256,11 +261,28 @@ function parseJsonLdJobPosting(html: string): {
         typeof posting.description === "string"
           ? stripTags(posting.description).slice(0, 2_000) || null
           : null;
+      const locations = locationFromJsonLd(posting.jobLocation);
+      const locationType =
+        typeof posting.jobLocationType === "string"
+          ? posting.jobLocationType
+          : "";
+      const workMode = /telecommute/iu.test(locationType)
+        ? "Remote"
+        : inferWorkMode(locations, descriptionText ?? "");
+      const postedRaw =
+        typeof posting.datePosted === "string" ? posting.datePosted.trim() : "";
+      let postedAt: string | null = null;
+      if (postedRaw.length > 0) {
+        const parsed = new Date(postedRaw);
+        postedAt = Number.isNaN(parsed.getTime()) ? null : parsed.toISOString();
+      }
       return {
         company,
         role,
-        locations: locationFromJsonLd(posting.jobLocation),
+        locations,
         descriptionText,
+        postedAt,
+        workMode,
       };
     } catch {
       // Ignore malformed JSON-LD blocks.
@@ -292,6 +314,8 @@ export function parseJobPageHtml(
     jsonLd?.descriptionText ??
     metaContent(html, "og:description") ??
     metaContent(html, "description");
+  const workMode =
+    jsonLd?.workMode ?? inferWorkMode(locations, descriptionText ?? "");
 
   return {
     finalUrl,
@@ -300,6 +324,8 @@ export function parseJobPageHtml(
     role,
     locations,
     descriptionText,
+    postedAt: jsonLd?.postedAt ?? null,
+    workMode,
   };
 }
 
@@ -316,6 +342,16 @@ export function formatJobPageSnapshot(
   }
   if (page.locations.length > 0) {
     lines.push(`Location: ${page.locations.join("; ")}`);
+  }
+  if (page.workMode !== null) {
+    lines.push(`Work mode: ${page.workMode}`);
+  }
+  if (page.postedAt !== null) {
+    lines.push(`Posted: ${page.postedAt.slice(0, 10)}`);
+  }
+  const excerpt = oneLineExcerpt(page.descriptionText);
+  if (excerpt !== null) {
+    lines.push(`Excerpt: ${excerpt}`);
   }
   if (page.descriptionText !== null) {
     lines.push(`Description: ${page.descriptionText}`);

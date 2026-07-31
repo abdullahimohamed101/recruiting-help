@@ -38,6 +38,12 @@ export {
   type ParsedJobPage,
 } from "./page-fetch.js";
 export {
+  formatPostedDate,
+  inferWorkMode,
+  oneLineExcerpt,
+  type WorkMode,
+} from "./work-mode.js";
+export {
   extractOpportunity,
   type ExtractionPipelineResult,
 } from "./pipeline.js";
