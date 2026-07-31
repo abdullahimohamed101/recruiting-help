@@ -30,6 +30,14 @@ export {
   tokenJaccardSimilarity,
 } from "./normalization.js";
 export {
+  enrichRawEventWithJobPages,
+  fetchJobPage,
+  formatJobPageSnapshot,
+  parseJobPageHtml,
+  type JobPageFetchRequest,
+  type ParsedJobPage,
+} from "./page-fetch.js";
+export {
   extractOpportunity,
   type ExtractionPipelineResult,
 } from "./pipeline.js";

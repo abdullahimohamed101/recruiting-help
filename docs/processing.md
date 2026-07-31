@@ -8,6 +8,7 @@ Phase 4 transforms accepted raw events into validated opportunities and queues a
 WF-03 schedule (every minute)
   -> POST http://processor:3001/v1/process-batch
     -> claim leased raw_events row
+    -> trusted job-page fetch (SSRF-safe GET; JSON-LD JobPosting / OG tags)
     -> deterministic extraction, else relevance filter + optional AI
     -> evidence validation and scope checks
     -> exact dedupe or fuzzy-review routing
@@ -35,6 +36,10 @@ Closed opportunities (`🔒`) are stored with status `closed` and do not enqueue
 
 ## Extraction policy
 
+- Before extraction, application URLs are fetched by a trusted SSRF-safe client
+  (HTTPS only, public DNS, size/time limits). JobPosting JSON-LD / Open Graph
+  fields are appended to the event text as labeled `Company` / `Role` /
+  `Location` lines. The LLM still has no tools or network access.
 - Deterministic parsers run first (GitHub markdown rows and labeled text).
 - Product scope includes internships, co-ops, and new-grad roles for all years; US remote/hybrid/on-site; sponsorship is tagged, never used to suppress.
 - Opportunities are labeled and sorted by type (`Internship`, `Co-op`, `New Grad`) and enqueued to type-specific destination keys (`internship-feed`, `co-op-feed`, `new-grad-feed`).

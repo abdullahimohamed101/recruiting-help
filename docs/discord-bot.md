@@ -72,9 +72,9 @@ Private Docker network only:
 7. Confirm it appears in `#aggregator-review`, not the feed.
 
 URL-only pastes are first-class. Drop a job link (Ashby, SmartRecruiters, Lever,
-Greenhouse, etc.) and the bot will store it; processing fills company/role/season/year
-from the URL when possible and can publish to the feed without a location. Extra
-context is optional:
+Greenhouse, Rippling, etc.) and the bot will store it. Processing fetches the
+posting page (SSRF-safe trusted GET), reads JobPosting/OG fields, then extracts
+company/role/location/season/year. Extra Discord context is optional:
 
 ```text
 https://jobs.smartrecruiters.com/WesternDigital/...
@@ -84,8 +84,9 @@ Remote US — Western Digital SWE intern
 https://jobs.smartrecruiters.com/WesternDigital/...
 ```
 
-Incomplete links (no parseable company/role) go to `#aggregator-review`. Ensure WF-03
-and WF-04 are published (or run `corepack pnpm process:events -- --limit 10`).
+If the page fetch fails or company/role are still missing, the item goes to
+`#aggregator-review`. Ensure WF-03 and WF-04 are published (or run
+`corepack pnpm process:events -- --limit 10`).
 
 ## Local commands
 

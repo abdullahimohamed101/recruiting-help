@@ -425,6 +425,13 @@ function parseJobApplicationUrlOpportunity(
     ) {
       company = humanizeSlug(decodeURIComponent(segments[0] ?? ""));
       role = humanizeSlug(decodeURIComponent(segments.at(-1) ?? ""));
+    } else if (
+      (host === "ats.rippling.com" || host.endsWith(".rippling.com")) &&
+      segments.length >= 3 &&
+      segments[1] === "jobs"
+    ) {
+      // Role titles live on the page (UUID path); company slug is in the path.
+      company = humanizeSlug(decodeURIComponent(segments[0] ?? ""));
     }
   } catch {
     return null;
