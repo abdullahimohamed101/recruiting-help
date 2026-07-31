@@ -60,6 +60,15 @@ describe("loadCallerRegistry", () => {
       loadCallerRegistry({
         AGGREGATOR_CALLERS_JSON: `'{"collector-dev":{"secret":"${secret}"}}'`,
       }),
-    ).toThrow(/wrapped in quotes|invalid JSON/i);
+    ).toThrow(/wrapped in outer quotes|invalid JSON/i);
+  });
+
+  it("explains Compose dotenv quote-stripping clearly", () => {
+    expect(() =>
+      loadCallerRegistry({
+        AGGREGATOR_CALLERS_JSON:
+          "{collector-dev:{secret:development-only-hmac-secret-replace-before-shared-use,allowed_sources:{github:[vanshb03/Summer2027-Internships]}}}",
+      }),
+    ).toThrow(/double quotes were stripped|dotenv/i);
   });
 });
