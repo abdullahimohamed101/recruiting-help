@@ -107,10 +107,29 @@ Import and publish WF-02:
 ```bash
 corepack pnpm n8n:import
 corepack pnpm n8n:publish:wf02
-docker compose -f infra/compose.dev.yaml restart n8n
 ```
 
-The workflow imports inactive. Publishing is an explicit operator action.
+`n8n:publish:wf02` restarts n8n so the production webhook registers. Imported
+workflows stay inactive until publish.
+
+### Discord bot → WF-02 networking
+
+The bot must call `http://n8n:5678/webhook/unified-intake` on the Compose
+network. Host `.env` often sets `INTAKE_URL=http://127.0.0.1:5678/...` for CLI
+scripts; Compose intentionally does **not** pass that value into the bot
+container (it would yield `fetch failed`).
+
+Verify from inside the bot container:
+
+```bash
+docker compose --env-file .env -f infra/compose.dev.yaml exec discord-bot printenv INTAKE_URL
+docker compose --env-file .env -f infra/compose.dev.yaml exec -T discord-bot \
+  node -e "fetch('http://n8n:5678/webhook/unified-intake',{method:'POST',headers:{'content-type':'application/json'},body:'{}'}).then(async r=>console.log(r.status, await r.text())).catch(e=>console.error(e.message,e.cause))"
+```
+
+- Connection error → n8n not reachable / wrong hostname
+- `404` + “webhook is not registered” → publish WF-02 and wait for n8n healthy
+- `401`/`403` JSON from intake → signature or allow-list (WF-02 is working)
 
 Send a test event:
 

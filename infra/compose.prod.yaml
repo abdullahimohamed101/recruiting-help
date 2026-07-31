@@ -45,6 +45,8 @@ services:
       N8N_HOST: ${N8N_HOST:-127.0.0.1}
       N8N_PORT: 5678
       N8N_PROTOCOL: ${N8N_PROTOCOL:-http}
+      N8N_SKIP_WEBHOOK_DEREGISTRATION_SHUTDOWN: "true"
+      WEBHOOK_URL: ${WEBHOOK_URL:-http://n8n:5678/}
       GENERIC_TIMEZONE: ${GENERIC_TIMEZONE:-America/Los_Angeles}
       TZ: ${GENERIC_TIMEZONE:-America/Los_Angeles}
     ports:

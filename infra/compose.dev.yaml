@@ -38,6 +38,9 @@ services:
       N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS: "true"
       N8N_DIAGNOSTICS_ENABLED: "false"
       N8N_PERSONALIZATION_ENABLED: "false"
+      # Keep production webhooks registered across Compose restarts/recreates.
+      N8N_SKIP_WEBHOOK_DEREGISTRATION_SHUTDOWN: "true"
+      WEBHOOK_URL: http://n8n:5678/
       GENERIC_TIMEZONE: ${GENERIC_TIMEZONE:-America/Los_Angeles}
       TZ: ${GENERIC_TIMEZONE:-America/Los_Angeles}
     ports:
@@ -126,7 +129,9 @@ services:
       DISCORD_FEED_CHANNEL_ID: ${DISCORD_FEED_CHANNEL_ID:?Set DISCORD_FEED_CHANNEL_ID}
       DISCORD_REVIEW_CHANNEL_ID: ${DISCORD_REVIEW_CHANNEL_ID:?Set DISCORD_REVIEW_CHANNEL_ID}
       DISCORD_OPS_CHANNEL_ID: ${DISCORD_OPS_CHANNEL_ID:?Set DISCORD_OPS_CHANNEL_ID}
-      INTAKE_URL: ${INTAKE_URL:-http://n8n:5678/webhook/unified-intake}
+      # Bot → WF-02 on the Compose network (do not interpolate host INTAKE_URL;
+      # .env uses 127.0.0.1 for CLI scripts, which is unreachable inside this container).
+      INTAKE_URL: http://n8n:5678/webhook/unified-intake
       AGGREGATOR_CALLER_ID: ${DISCORD_BOT_CALLER_ID:-discord-bot-dev}
       AGGREGATOR_CALLER_SECRET: ${AGGREGATOR_CALLER_SECRET:-development-only-hmac-secret-replace-before-shared-use}
       PORT: 3002

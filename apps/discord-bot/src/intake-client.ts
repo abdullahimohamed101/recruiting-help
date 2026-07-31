@@ -27,14 +27,32 @@ export async function submitSignedRawEvent(input: {
     secret: input.callerSecret,
     rawBody,
   });
-  const response = await fetchImpl(input.intakeUrl, {
-    method: "POST",
-    headers: {
-      "content-type": "application/json",
-      ...headers,
-    },
-    body: rawBody,
-  });
+  let response: Response;
+  try {
+    response = await fetchImpl(input.intakeUrl, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        ...headers,
+      },
+      body: rawBody,
+    });
+  } catch (error) {
+    const detail =
+      error instanceof Error
+        ? [
+            error.message,
+            error.cause instanceof Error ? error.cause.message : null,
+          ]
+            .filter((part): part is string => part !== null && part.length > 0)
+            .join(": ")
+        : "intake_fetch_failed";
+    return {
+      kind: "rejected",
+      error: `intake_unreachable:${detail}`,
+      statusCode: 0,
+    };
+  }
   const body: unknown = await response.json().catch(() => null);
   if (
     response.ok &&

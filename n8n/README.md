@@ -11,6 +11,10 @@ Rules:
 - `corepack pnpm n8n:import` imports every workflow in the mounted directory.
 - `corepack pnpm n8n:export` prints the current instance workflows for review.
 - Imported workflows are inactive until explicitly published.
+- `corepack pnpm n8n:publish:wf02` (and the other publish scripts) restart n8n
+  after publish so production webhooks register.
+- Discord bot intake stays on WF-02 (`http://n8n:5678/webhook/unified-intake`).
+  Do not point the bot at host `127.0.0.1` from inside Compose.
 
 Implemented:
 

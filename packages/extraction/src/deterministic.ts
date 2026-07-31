@@ -51,8 +51,15 @@ function inferSeason(text: string): OpportunityCandidate["season"] {
 }
 
 function inferYear(text: string): number | null {
-  // Match both "2027" and glued forms such as "Summer2027".
-  const year = text.match(/(20\d{2})/u)?.[1];
+  // Prefer season-adjacent years ("Summer 2027", "summer-2026", "Summer2027").
+  const seasonYear = text.match(
+    /\b(?:spring|summer|fall|autumn|winter)[\s-]*(20\d{2})\b/iu,
+  )?.[1];
+  if (seasonYear !== undefined) {
+    return Number(seasonYear);
+  }
+  // Otherwise take a standalone 20xx not embedded in a longer digit string (job ids).
+  const year = text.match(/(?<!\d)(20\d{2})(?!\d)/u)?.[1];
   return year === undefined ? null : Number(year);
 }
 
@@ -356,8 +363,152 @@ function parseLabeledOpportunity(
   };
 }
 
+function humanizeSlug(value: string): string {
+  return value
+    .replace(/[-_]+/gu, " ")
+    .replace(/([a-z])([A-Z])/gu, "$1 $2")
+    .replace(/\s+/gu, " ")
+    .trim()
+    .replace(/\b\w/gu, (character) => character.toUpperCase());
+}
+
+function parseJobApplicationUrlOpportunity(
+  event: RawEvent,
+): DeterministicExtraction | null {
+  const sourceText = event.text?.trim() ?? "";
+  if (sourceText.length === 0) {
+    return null;
+  }
+  // Only treat nearly-URL-only pastes (Discord fallback). Labeled/markdown win first.
+  if (
+    sourceText.includes("|") ||
+    /^(?:company|role|position|title)\s*:/imu.test(sourceText)
+  ) {
+    return null;
+  }
+  const urls = extractEvidenceUrls(event);
+  if (urls.length === 0) {
+    return null;
+  }
+  const applicationUrl = urls[0] ?? null;
+  if (applicationUrl === null) {
+    return null;
+  }
+
+  let company: string | null = null;
+  let role: string | null = null;
+  try {
+    const parsed = new URL(applicationUrl);
+    const host = parsed.hostname.toLowerCase();
+    const segments = parsed.pathname
+      .split("/")
+      .filter((part) => part.length > 0);
+
+    if (host.endsWith("smartrecruiters.com") && segments.length >= 2) {
+      company = humanizeSlug(decodeURIComponent(segments[0] ?? ""));
+      const slug = decodeURIComponent(segments[1] ?? "").replace(/^\d+-/u, "");
+      role = humanizeSlug(slug);
+    } else if (host.endsWith("ashbyhq.com") && segments.length >= 1) {
+      company = humanizeSlug(decodeURIComponent(segments[0] ?? ""));
+      if (segments.length >= 3) {
+        role = humanizeSlug(decodeURIComponent(segments[2] ?? ""));
+      }
+    } else if (host.endsWith("lever.co") && segments.length >= 1) {
+      company = humanizeSlug(decodeURIComponent(segments[0] ?? ""));
+      if (segments.length >= 2) {
+        role = humanizeSlug(decodeURIComponent(segments[1] ?? ""));
+      }
+    } else if (
+      (host.endsWith("greenhouse.io") ||
+        host.includes("boards.greenhouse.io")) &&
+      segments.length >= 2
+    ) {
+      company = humanizeSlug(decodeURIComponent(segments[0] ?? ""));
+      role = humanizeSlug(decodeURIComponent(segments.at(-1) ?? ""));
+    }
+  } catch {
+    return null;
+  }
+
+  if (company === null && role === null) {
+    return null;
+  }
+
+  const hints = sourceContextHints(event);
+  const contextText = [sourceText, hints].join("\n");
+  const { year, season } = inferSeasonAndYear({
+    primaryText: contextText,
+    fallbackText: "",
+  });
+  const employmentType = inferEmploymentType(contextText);
+  const sponsorshipStatus = sponsorshipFromText(contextText);
+  const evidence = evidenceForCandidate({
+    sourceText: contextText,
+    company,
+    role,
+    locations: [],
+    season,
+    year,
+    employmentType,
+    sponsorshipStatus,
+    applicationUrl,
+    postedAt: null,
+    postedEvidence: null,
+  });
+  // Humanized company/role may not appear literally in the URL; keep path tokens as evidence.
+  if (company !== null) {
+    const companyToken = company.replaceAll(" ", "");
+    if (contextText.includes(companyToken)) {
+      evidence.company = companyToken;
+    } else if (contextText.includes(company)) {
+      evidence.company = company;
+    } else {
+      delete evidence.company;
+    }
+  }
+  if (role !== null) {
+    const roleToken = role.toLowerCase().replaceAll(" ", "-");
+    if (contextText.toLowerCase().includes(roleToken)) {
+      evidence.role = roleToken;
+    } else if (contextText.includes(role)) {
+      evidence.role = role;
+    } else {
+      delete evidence.role;
+    }
+  }
+
+  return {
+    candidate: OpportunityCandidateSchema.parse({
+      schema_version: 1,
+      company,
+      role,
+      locations: [],
+      season,
+      year,
+      employment_type: employmentType,
+      sponsorship_status: sponsorshipStatus,
+      application_url: applicationUrl,
+      deadline: null,
+      posted_at: null,
+      source_url: event.source_url,
+      description_excerpt: null,
+      confidence:
+        company !== null && role !== null && applicationUrl !== null
+          ? 0.88
+          : 0.72,
+      evidence,
+    }),
+    parserVersion: "job-application-url-v1",
+    closed: false,
+  };
+}
+
 export function extractDeterministically(
   event: RawEvent,
 ): DeterministicExtraction | null {
-  return parseMarkdownOpportunity(event) ?? parseLabeledOpportunity(event);
+  return (
+    parseMarkdownOpportunity(event) ??
+    parseLabeledOpportunity(event) ??
+    parseJobApplicationUrlOpportunity(event)
+  );
 }

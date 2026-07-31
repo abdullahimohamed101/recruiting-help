@@ -43,7 +43,7 @@ Required for `corepack pnpm bot:dev` or Compose `--profile discord`:
 - `DISCORD_REVIEW_CHANNEL_ID`
 - `DISCORD_OPS_CHANNEL_ID`
 - `DATABASE_URL`
-- `INTAKE_URL` (WF-02 webhook)
+- `INTAKE_URL` (Compose pins the bot to WF-02: `http://n8n:5678/webhook/unified-intake`; do not reuse the host `127.0.0.1` CLI value inside the bot container)
 - `AGGREGATOR_CALLER_ID` / `AGGREGATOR_CALLER_SECRET`
 
 Allow-list the bot caller for:
@@ -69,6 +69,17 @@ Private Docker network only:
 5. Confirm duplicate source intake shows `♻️` when the same Discord message id is retried through intake, and exact opportunity URL duplicates do not create a second feed outbox row.
 6. Submit an incomplete item.
 7. Confirm it appears in `#aggregator-review`, not the feed.
+
+URL-only pastes are accepted into intake (`✅`) but usually land in **review**, not the feed, because location is missing. For a feed post, paste structured text:
+
+```text
+Company: Western Digital
+Role: Summer 2026 Intern, IT Software Engineering
+Location: Remote US
+Apply: https://jobs.smartrecruiters.com/WesternDigital/...
+```
+
+Then ensure WF-03 and WF-04 are published (or run `corepack pnpm process:events -- --limit 10`).
 
 ## Local commands
 

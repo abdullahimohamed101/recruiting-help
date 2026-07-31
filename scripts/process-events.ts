@@ -1,3 +1,5 @@
+import { existsSync } from "node:fs";
+import { resolve } from "node:path";
 import { createDatabasePool } from "../packages/database/src/index.js";
 import { GeminiStructuredExtractionProvider } from "../packages/extraction/src/index.js";
 import {
@@ -5,6 +7,11 @@ import {
   DEFAULT_FEED_DESTINATION_KEY,
   processEventBatch,
 } from "../packages/processing/src/index.js";
+
+const envFile = resolve(".env");
+if (existsSync(envFile)) {
+  process.loadEnvFile(envFile);
+}
 
 function readFlag(name: string): string | undefined {
   const index = process.argv.indexOf(name);
