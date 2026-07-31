@@ -1,0 +1,73 @@
+version: 1
+
+opportunity_scope:
+  employment_types:
+    - internship
+    - co_op
+  exclude_employment_types:
+    - new_grad
+  years:
+    - 2027
+  seasons:
+    - spring
+    - summer
+    - fall
+    - winter
+
+geography:
+  mode: allow_list
+  countries:
+    - US
+  allow_remote_us: true
+  allow_ambiguous_remote: false
+  ambiguous_location_action: review
+  multi_location_match: any_allowed_location
+
+sponsorship:
+  mode: include_and_tag
+  statuses:
+    - unknown
+    - offers_or_considers
+    - does_not_offer
+    - us_citizenship_required
+  suppress_based_on_sponsorship: false
+
+status:
+  publish:
+    - open
+  store_without_publishing:
+    - closed
+    - possibly_removed
+  missing_application_url_action: review
+
+relevance:
+  positive_terms:
+    - internship
+    - intern
+    - co-op
+    - co op
+    - application
+    - apply
+    - careers
+  negative_terms:
+    - new grad
+    - senior software engineer
+    - staff software engineer
+  require_url_or_strong_keyword_signal: true
+
+review:
+  missing_company: true
+  missing_role: true
+  missing_application_url: true
+  ambiguous_year: true
+  ambiguous_geography: true
+  fuzzy_duplicate: true
+  minimum_auto_publish_confidence: 0.85
+
+ai:
+  provider: gemini
+  paid_overage_monthly_usd: 0
+  deterministic_first: true
+  local_ocr_before_vision: true
+  require_field_evidence: true
+  require_literal_source_url: true

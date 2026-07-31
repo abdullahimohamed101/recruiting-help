@@ -1,0 +1,9 @@
+node_modules/
+.pnpm-store/
+dist/
+coverage/
+.data/
+browser-profiles/
+diagnostics/
+pnpm-lock.yaml
+n8n/workflows/*.json
