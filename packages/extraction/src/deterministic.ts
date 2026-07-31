@@ -97,6 +97,21 @@ function sponsorshipFromText(
   return "unknown";
 }
 
+function inferEmploymentType(
+  text: string,
+): OpportunityCandidate["employment_type"] {
+  if (/\bco[- ]?op\b/iu.test(text)) {
+    return "co_op";
+  }
+  if (/\bintern(ship)?\b/iu.test(text)) {
+    return "internship";
+  }
+  if (/\b(new[- ]?grad|early[- ]?career)\b/iu.test(text)) {
+    return "new_grad";
+  }
+  return null;
+}
+
 function evidenceForCandidate(input: {
   sourceText: string;
   company: string | null;
@@ -121,7 +136,11 @@ function evidenceForCandidate(input: {
   if (input.year !== null) evidence.year = input.year.toString();
   if (input.employmentType !== null) {
     const pattern =
-      input.employmentType === "co_op" ? /co[- ]?op/iu : /intern(ship)?/iu;
+      input.employmentType === "co_op"
+        ? /co[- ]?op/iu
+        : input.employmentType === "new_grad"
+          ? /new[- ]?grad|early[- ]?career/iu
+          : /intern(ship)?/iu;
     const match = input.sourceText.match(pattern)?.[0];
     if (match !== undefined) evidence.employment_type = match;
   }
@@ -182,11 +201,7 @@ function parseMarkdownOpportunity(
     null;
   const year = inferYear(contextText);
   const season = inferSeason(contextText);
-  const employmentType = /\bco[- ]?op\b/iu.test(contextText)
-    ? "co_op"
-    : /\bintern(ship)?\b/iu.test(contextText)
-      ? "internship"
-      : null;
+  const employmentType = inferEmploymentType(contextText);
   const sponsorshipStatus = sponsorshipFromText(contextText);
   const postedAt = inferPostedAt(postedCell, event.captured_at);
   const evidence = evidenceForCandidate({
@@ -256,11 +271,7 @@ function parseLabeledOpportunity(
   const applicationUrl = extractEvidenceUrls(event)[0] ?? null;
   const year = inferYear(contextText);
   const season = inferSeason(contextText);
-  const employmentType = /\bco[- ]?op\b/iu.test(contextText)
-    ? "co_op"
-    : /\bintern(ship)?\b/iu.test(contextText)
-      ? "internship"
-      : null;
+  const employmentType = inferEmploymentType(contextText);
   const sponsorshipStatus = sponsorshipFromText(contextText);
   const evidence = evidenceForCandidate({
     sourceText: contextText,

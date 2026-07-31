@@ -36,6 +36,8 @@ Closed opportunities (`🔒`) are stored with status `closed` and do not enqueue
 ## Extraction policy
 
 - Deterministic parsers run first (GitHub markdown rows and labeled text).
+- Product scope includes internships, co-ops, and new-grad roles for all years; US remote/hybrid/on-site; sponsorship is tagged, never used to suppress.
+- Opportunities are labeled and sorted by type (`Internship`, `Co-op`, `New Grad`) and enqueued to type-specific destination keys (`internship-feed`, `co-op-feed`, `new-grad-feed`).
 - Irrelevant noise is ignored before any model call.
 - AI fallback is provider-neutral; automated tests use fakes.
 - Every non-null field requires source evidence.

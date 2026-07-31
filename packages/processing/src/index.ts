@@ -18,8 +18,11 @@ import {
 import {
   canonicalizeApplicationUrl,
   createOpportunityFingerprint,
+  employmentTypeLabel,
+  employmentTypeSortOrder,
   extractOpportunity,
   extractStableJobIdentity,
+  feedDestinationKey,
   isFuzzyDuplicateCandidate,
   isOutsideProductScope,
   resolveSafeRedirects,
@@ -118,6 +121,8 @@ function buildOutboxPayload(
     season: opportunity.season,
     year: opportunity.year,
     employment_type: opportunity.employmentType,
+    category_label: employmentTypeLabel(opportunity.employmentType),
+    sort_order: employmentTypeSortOrder(opportunity.employmentType),
     sponsorship_status: opportunity.sponsorshipStatus,
     application_url: opportunity.applicationUrl,
     deadline: opportunity.deadline,
@@ -274,7 +279,6 @@ export async function processWorkItem(
   options: ProcessNextEventOptions = {},
 ): Promise<ProcessNextEventResult> {
   const provider = options.provider ?? null;
-  const destinationKey = options.destinationKey ?? DEFAULT_FEED_DESTINATION_KEY;
   const minimumConfidence =
     options.minimumAutoPublishConfidence ?? DEFAULT_AUTO_PUBLISH_CONFIDENCE;
   const resolveRedirects = options.resolveRedirects ?? false;
@@ -413,6 +417,10 @@ export async function processWorkItem(
       });
     }
 
+    const destinationKey =
+      options.destinationKey ??
+      feedDestinationKey(opportunity.employmentType) ??
+      DEFAULT_FEED_DESTINATION_KEY;
     const persisted = await persistProcessedOpportunity(pool, {
       rawEventId: work.rawEventId,
       processingRunId: work.processingRunId,

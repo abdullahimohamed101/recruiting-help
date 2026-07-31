@@ -17,6 +17,9 @@ export {
 } from "./evidence.js";
 export {
   createOpportunityFingerprint,
+  employmentTypeLabel,
+  employmentTypeSortOrder,
+  feedDestinationKey,
   isFuzzyDuplicateCandidate,
   isOutsideProductScope,
   locationDisposition,

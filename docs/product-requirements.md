@@ -7,7 +7,7 @@
 
 ## 1. Product objective
 
-Continuously collect 2027 United States and remote-US internship/co-op opportunities from configured GitHub, Discord, Instagram, and Slack sources; normalize and deduplicate them; then publish useful alerts into an operator-owned Discord server.
+Continuously collect United States (remote / hybrid / on-site) internship, co-op, and new-grad opportunities from configured GitHub, Discord, Instagram, and Slack sources; normalize and deduplicate them; then publish useful alerts into an operator-owned Discord server. Opportunities are labeled and sorted by employment type (Internship, Co-op, New Grad).
 
 Notion tracking is deferred until the collection and Discord delivery pipeline is stable.
 
@@ -17,17 +17,15 @@ Notion tracking is deferred until the collection and Discord delivery pipeline i
 
 - Internships
 - Co-ops
-- All 2027 recruiting seasons
-- United States locations
+- New-grad / early-career roles
+- All graduation / recruiting years
+- United States locations (remote, hybrid, and on-site)
 - Roles explicitly marked remote-US
-- Roles with unknown sponsorship status
-- Roles that explicitly do not sponsor or require citizenship, provided they are visibly tagged
+- Roles with any sponsorship status (yes, no, unknown, citizenship-required), tagged rather than suppressed
 
 ### Excluded initially
 
-- New-grad roles
 - Roles outside the United States unless explicitly remote-US
-- Opportunities for years other than 2027
 - Automatic applications
 - Resume tailoring
 - Candidate ranking

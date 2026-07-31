@@ -31,7 +31,7 @@ export function normalizeCompany(value: string): string {
 
 export function normalizeRole(value: string): string {
   return normalizeText(value)
-    .replace(/\b(summer|spring|fall|winter)\s+2027\b/gu, " ")
+    .replace(/\b(summer|spring|fall|winter)\s+20\d{2}\b/gu, " ")
     .replace(/\binternships?\b/gu, "intern")
     .replace(/\bengineering\b/gu, "engineer")
     .replace(/\s+/gu, " ")
@@ -67,9 +67,6 @@ export function reviewReasonsForCandidate(
   if (candidate.application_url === null) {
     reasons.add("missing_application_url");
   }
-  if (candidate.year === null) {
-    reasons.add("ambiguous_year");
-  }
   if (locationDisposition(candidate.locations) === "ambiguous") {
     reasons.add("ambiguous_geography");
   }
@@ -82,10 +79,53 @@ export function reviewReasonsForCandidate(
 export function isOutsideProductScope(
   candidate: OpportunityCandidate,
 ): boolean {
-  return (
-    (candidate.year !== null && candidate.year !== 2027) ||
-    locationDisposition(candidate.locations) === "rejected"
-  );
+  // All graduation years are in scope. Reject only clearly non-US geography.
+  return locationDisposition(candidate.locations) === "rejected";
+}
+
+export function employmentTypeLabel(
+  employmentType: OpportunityCandidate["employment_type"],
+): string {
+  switch (employmentType) {
+    case "internship":
+      return "Internship";
+    case "co_op":
+      return "Co-op";
+    case "new_grad":
+      return "New Grad";
+    case null:
+      return "Uncategorized";
+  }
+}
+
+export function employmentTypeSortOrder(
+  employmentType: OpportunityCandidate["employment_type"],
+): number {
+  switch (employmentType) {
+    case "internship":
+      return 1;
+    case "co_op":
+      return 2;
+    case "new_grad":
+      return 3;
+    case null:
+      return 99;
+  }
+}
+
+export function feedDestinationKey(
+  employmentType: OpportunityCandidate["employment_type"],
+): string {
+  switch (employmentType) {
+    case "internship":
+      return "internship-feed";
+    case "co_op":
+      return "co-op-feed";
+    case "new_grad":
+      return "new-grad-feed";
+    case null:
+      return "uncategorized-feed";
+  }
 }
 
 export function createOpportunityFingerprint(input: {

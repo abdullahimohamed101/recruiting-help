@@ -6,13 +6,13 @@ export type RelevanceDecision = {
   reason: string;
 };
 
-const opportunityPattern = /\b(intern(ship)?|co[- ]?op)\b/iu;
+const opportunityPattern =
+  /\b(intern(ship)?|co[- ]?op|new[- ]?grad|early[- ]?career)\b/iu;
 const applicationPattern =
   /\b(apply|application|applications|career|careers|greenhouse|lever|workday|ashby)\b/iu;
 const noisePattern =
   /\b(webinar|conference|meetup|workshop|resume review|office hours|hackathon)\b/iu;
-const excludedRolePattern =
-  /\b(new[- ]?grad|senior|staff|principal|manager)\b/iu;
+const excludedRolePattern = /\b(senior|staff|principal|manager)\b/iu;
 
 export function classifyRelevance(event: RawEvent): RelevanceDecision {
   const text = event.text ?? "";

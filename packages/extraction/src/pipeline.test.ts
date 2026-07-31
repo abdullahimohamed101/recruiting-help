@@ -77,6 +77,9 @@ describe("deterministic extraction", () => {
         "low_confidence",
       ]),
     );
+    expect(reviewReasonsForCandidate(result!.candidate, 0.85)).not.toContain(
+      "ambiguous_year",
+    );
   });
 });
 
@@ -87,7 +90,8 @@ describe("relevance fixtures", () => {
     ["Intern roles opening soon", "ambiguous"],
     ["Apply at our careers page", "ambiguous"],
     ["Senior engineer — apply now", "irrelevant"],
-    ["New grad software engineer", "irrelevant"],
+    ["New grad software engineer", "ambiguous"],
+    ["New grad software engineer https://jobs.example.com/1", "relevant"],
     ["Join our webinar tomorrow", "irrelevant"],
     ["Community meetup tonight", "irrelevant"],
     ["Resume review office hours", "irrelevant"],
@@ -169,6 +173,29 @@ describe("AI boundary", () => {
       kind: "review",
       reasons: ["ai_unavailable"],
     });
+  });
+});
+
+describe("employment type labeling", () => {
+  it("classifies and labels new-grad roles separately from internships", async () => {
+    const { employmentTypeLabel, feedDestinationKey } =
+      await import("./normalization.js");
+    const event = makeEvent(
+      "Company: Example Corp\nRole: New Grad Software Engineer\nLocation: Remote US\nApply: https://jobs.lever.co/example/ng-1",
+    );
+    const result = await extractOpportunity(event, null);
+    expect(result).toMatchObject({
+      kind: "candidate",
+      candidate: { employment_type: "new_grad" },
+    });
+    if (result.kind === "candidate") {
+      expect(employmentTypeLabel(result.candidate.employment_type)).toBe(
+        "New Grad",
+      );
+      expect(feedDestinationKey(result.candidate.employment_type)).toBe(
+        "new-grad-feed",
+      );
+    }
   });
 });
 

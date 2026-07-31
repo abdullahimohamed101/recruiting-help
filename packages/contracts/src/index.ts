@@ -136,7 +136,7 @@ export const RawEventSchema = z.discriminatedUnion("source", [
     .strict(),
 ]);
 
-export const EmploymentTypeSchema = z.enum(["internship", "co_op"]);
+export const EmploymentTypeSchema = z.enum(["internship", "co_op", "new_grad"]);
 export const SeasonSchema = z.enum(["spring", "summer", "fall", "winter"]);
 export const SponsorshipStatusSchema = z.enum([
   "unknown",

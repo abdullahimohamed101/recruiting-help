@@ -65,10 +65,15 @@ describeWithDatabase("database integration", () => {
   it("recreates the schema from scratch and applies each migration once", async () => {
     expect(
       await rollbackAllForDevelopment(pool, { confirmDestructive: true }),
-    ).toEqual(["0002_processing_core", "0001_initial_schema"]);
+    ).toEqual([
+      "0003_expand_employment_types",
+      "0002_processing_core",
+      "0001_initial_schema",
+    ]);
     expect(await migrateToLatest(pool)).toEqual([
       "0001_initial_schema",
       "0002_processing_core",
+      "0003_expand_employment_types",
     ]);
     expect(await migrateToLatest(pool)).toEqual([]);
 
