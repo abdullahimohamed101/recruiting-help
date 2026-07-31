@@ -69,9 +69,13 @@ services:
     environment:
       NODE_ENV: development
       DATABASE_URL: postgresql://${POSTGRES_USER:-recruiting_help}:${POSTGRES_PASSWORD:-local-development-only}@postgres:5432/${POSTGRES_DB:-recruiting_help}
-      # Keep as ${VAR:-{json}} scalar (starts with $) so YAML does not parse the
-      # default as a mapping. Do not wrap this interpolation in extra quotes.
-      AGGREGATOR_CALLERS_JSON: ${AGGREGATOR_CALLERS_JSON:-{"collector-dev":{"secret":"development-only-hmac-secret-replace-before-shared-use","allowed_sources":{"github":["vanshb03/Summer2027-Internships"]}},"discord-bot-dev":{"secret":"development-only-hmac-secret-replace-before-shared-use","allowed_sources":{"discord_manual":["replace-with-discord-guild-id"],"slack_manual":["discord-intake"],"instagram_manual":["discord-intake"]}}}}
+      # ROOT CAUSE FIX: Do NOT use ${AGGREGATOR_CALLERS_JSON} from .env.
+      # Compose's dotenv parser treats " inside unquoted values as quote syntax and
+      # strips them, turning valid JSON into {collector-dev:{secret:...}} which
+      # crashes intake-api on JSON.parse. Pass JSON as a YAML string scalar and
+      # only interpolate simple scalars (secret, guild id).
+      AGGREGATOR_CALLERS_JSON: >-
+        {"collector-dev":{"secret":"${AGGREGATOR_CALLER_SECRET:-development-only-hmac-secret-replace-before-shared-use}","allowed_sources":{"github":["vanshb03/Summer2027-Internships"]}},"discord-bot-dev":{"secret":"${AGGREGATOR_CALLER_SECRET:-development-only-hmac-secret-replace-before-shared-use}","allowed_sources":{"discord_manual":["${DISCORD_GUILD_ID:-replace-with-discord-guild-id}"],"slack_manual":["discord-intake"],"instagram_manual":["discord-intake"]}}}
       PORT: 3000
     healthcheck:
       test:

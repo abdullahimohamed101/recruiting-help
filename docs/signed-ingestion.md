@@ -93,11 +93,12 @@ Place the generated value in:
 AGGREGATOR_CALLER_SECRET=...
 ```
 
-Development Compose passes `AGGREGATOR_CALLERS_JSON` from `.env` (with an inline
-default). Keep that value as **unquoted** JSON in `.env` — no surrounding
-`'`/`"` — and avoid macOS TextEdit smart quotes, which corrupt the string and
-crash `intake-api` on `JSON.parse`. Production also requires
-`AGGREGATOR_CALLERS_JSON`.
+Development Compose **builds** `AGGREGATOR_CALLERS_JSON` in `compose.dev.yaml`
+as a YAML string and interpolates only `AGGREGATOR_CALLER_SECRET` and
+`DISCORD_GUILD_ID`. Do not put `AGGREGATOR_CALLERS_JSON` in `.env` for Compose:
+the dotenv parser strips `"` from unquoted JSON (`{"a":"b"}` → `{a:b}`), which
+crashes `intake-api` on `JSON.parse`. Production still sets
+`AGGREGATOR_CALLERS_JSON` on the VPS (single-quote the value in dotenv files).
 
 Start services and migrate:
 

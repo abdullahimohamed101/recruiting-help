@@ -69,12 +69,18 @@ function describeInvalidJson(serialized: string, detail: string): string {
     .slice(0, 8);
 
   const hints: string[] = [];
+  // Compose dotenv strips " from unquoted JSON: {"a":"b"} → {a:b}
+  if (/^\{[A-Za-z0-9_-]+:/.test(serialized) && !serialized.includes('"')) {
+    hints.push(
+      "double quotes were stripped — Compose dotenv cannot carry unquoted JSON in .env; infra/compose.dev.yaml must supply AGGREGATOR_CALLERS_JSON as a YAML string (not ${AGGREGATOR_CALLERS_JSON} from .env)",
+    );
+  }
   if (
     (serialized.startsWith("'") && serialized.endsWith("'")) ||
     (serialized.startsWith('"') && serialized.endsWith('"'))
   ) {
     hints.push(
-      "value appears wrapped in quotes — use unquoted JSON in .env (AGGREGATOR_CALLERS_JSON={...})",
+      "value appears wrapped in outer quotes that were preserved literally",
     );
   }
   if (nonAscii.length > 0) {
@@ -84,7 +90,7 @@ function describeInvalidJson(serialized: string, detail: string): string {
   }
   if (serialized.includes("map[")) {
     hints.push(
-      "value looks like a Go map dump — Compose parsed JSON as YAML; keep the ${AGGREGATOR_CALLERS_JSON:-{...}} form as a single scalar",
+      "value looks like a Go map dump — Compose parsed the env value as a YAML mapping instead of a string",
     );
   }
 
