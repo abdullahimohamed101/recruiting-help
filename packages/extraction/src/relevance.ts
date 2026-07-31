@@ -14,7 +14,7 @@ const noisePattern =
   /\b(webinar|conference|meetup|workshop|resume review|office hours|hackathon)\b/iu;
 const excludedRolePattern = /\b(senior|staff|principal|manager)\b/iu;
 const jobApplicationHostPattern =
-  /(?:^|\.)(?:ashbyhq\.com|greenhouse\.io|lever\.co|myworkdayjobs\.com|workdayjobs\.com|smartrecruiters\.com|icims\.com|jobvite\.com|boards\.eu)$|(?:^|\.)jobs\.|careers\./iu;
+  /(?:^|\.)(?:ashbyhq\.com|greenhouse\.io|lever\.co|myworkdayjobs\.com|workdayjobs\.com|smartrecruiters\.com|icims\.com|jobvite\.com|rippling\.com|boards\.eu)$|(?:^|\.)(?:ats\.|jobs\.|careers\.)/iu;
 
 function urlLooksLikeJobApplication(url: string): boolean {
   try {

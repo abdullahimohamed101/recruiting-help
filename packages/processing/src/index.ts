@@ -21,6 +21,7 @@ import {
   createOpportunityFingerprint,
   employmentTypeLabel,
   employmentTypeSortOrder,
+  enrichRawEventWithJobPages,
   extractOpportunity,
   extractStableJobIdentity,
   feedDestinationKey,
@@ -369,7 +370,12 @@ export async function processWorkItem(
   const resolveRedirects = options.resolveRedirects ?? false;
 
   try {
-    const extraction = await extractOpportunity(work.event, provider);
+    // Trusted ATS/job-page fetch (SSRF-safe). Model still has no network access;
+    // posting title/company/location become part of the event source text.
+    const { event: enrichedEvent } = await enrichRawEventWithJobPages(
+      work.event,
+    );
+    const extraction = await extractOpportunity(enrichedEvent, provider);
     if (extraction.kind === "ignored") {
       const audit = auditFromExtraction({
         method: "deterministic",
@@ -419,7 +425,7 @@ export async function processWorkItem(
     }
 
     const evidence = validateCandidateEvidence(
-      work.event,
+      enrichedEvent,
       extraction.candidate,
     );
     const auditBase = auditFromExtraction({

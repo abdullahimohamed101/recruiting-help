@@ -113,6 +113,14 @@ export function extractStableJobIdentity(
     const id = segments.at(-1);
     return id === undefined ? null : { board: "workday", id };
   }
+  if (
+    (host === "ats.rippling.com" || host.endsWith(".rippling.com")) &&
+    segments.length >= 3 &&
+    segments[1] === "jobs"
+  ) {
+    const id = segments[2];
+    return id === undefined ? null : { board: "rippling", id };
+  }
 
   return null;
 }
