@@ -57,8 +57,10 @@ function inferYear(text: string): number | null {
 }
 
 function metadataPath(event: RawEvent): string {
-  const path = event.metadata.path;
-  return typeof path === "string" ? path : "";
+  if (event.source !== "github") {
+    return "";
+  }
+  return event.metadata.path;
 }
 
 export function sourceContextHints(event: RawEvent): string {
