@@ -132,7 +132,7 @@ export function loadCallerRegistry(
     parsed = JSON.parse(serialized) as unknown;
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);
-    throw new Error(describeInvalidJson(serialized, detail));
+    throw new Error(describeInvalidJson(serialized, detail), { cause: error });
   }
 
   return callersFromObject(parsed);
