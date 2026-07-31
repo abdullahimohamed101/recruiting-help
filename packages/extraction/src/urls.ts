@@ -11,6 +11,7 @@ const trackingParameterNames = new Set([
   "ref",
   "referrer",
   "source",
+  "jobsite",
 ]);
 
 function trimUrlPunctuation(value: string): string {
