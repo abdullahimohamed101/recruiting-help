@@ -86,6 +86,9 @@ importers:
       '@recruiting-help/database':
         specifier: workspace:*
         version: link:../../packages/database
+      '@recruiting-help/discord':
+        specifier: workspace:*
+        version: link:../../packages/discord
       '@recruiting-help/extraction':
         specifier: workspace:*
         version: link:../../packages/extraction

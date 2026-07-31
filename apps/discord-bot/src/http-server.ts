@@ -151,6 +151,44 @@ export function createDiscordBotHttpServer(input: {
         return;
       }
 
+      if (request.method === "POST" && request.url === "/v1/react") {
+        let body: Record<string, unknown>;
+        try {
+          body = await readJsonBody(request);
+        } catch {
+          sendJson(response, 400, { ok: false, error: "invalid_body" });
+          return;
+        }
+        const channelId =
+          typeof body.channel_id === "string" ? body.channel_id : "";
+        const messageId =
+          typeof body.message_id === "string" ? body.message_id : "";
+        const emoji = typeof body.emoji === "string" ? body.emoji : "";
+        if (
+          !/^\d+$/.test(channelId) ||
+          !/^\d+$/.test(messageId) ||
+          emoji.length === 0 ||
+          emoji.length > 64
+        ) {
+          sendJson(response, 400, { ok: false, error: "invalid_react_target" });
+          return;
+        }
+        if (!input.discordReady()) {
+          sendJson(response, 503, { ok: false, error: "discord_unavailable" });
+          return;
+        }
+        const reacted = await input.publisher.addMessageReaction({
+          channelId,
+          messageId,
+          emoji,
+        });
+        sendJson(response, reacted.kind === "ok" ? 200 : 502, {
+          ok: reacted.kind === "ok",
+          result: reacted,
+        });
+        return;
+      }
+
       sendJson(response, 404, { ok: false, error: "not_found" });
     })().catch((error: unknown) => {
       console.error(

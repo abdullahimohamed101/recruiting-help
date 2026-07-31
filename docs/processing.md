@@ -27,7 +27,7 @@ Every claimed raw event ends in one of:
 
 | Disposition | Meaning                                                                                                |
 | ----------- | ------------------------------------------------------------------------------------------------------ |
-| `processed` | Opportunity linked; outbox enqueued only for new active opportunities                                  |
+| `processed` | Opportunity linked; outbox enqueued only for new active opportunities. Exact duplicates update `last_seen_at` only and (for Discord intake) request a `🔁` reaction via `DISCORD_BOT_URL`. |
 | `ignored`   | Noise or outside product scope                                                                         |
 | `review`    | Needs human review (missing fields, low confidence, fuzzy duplicate, invalid evidence, AI unavailable) |
 | `failed`    | Retriable processing exception with backoff                                                            |

@@ -14,7 +14,15 @@ import {
   createRawEventFixture,
   resetTestDatabase,
 } from "@recruiting-help/database/testing";
-import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
 import { processNextEvent, processWorkItem } from "./index.js";
 
 const testDatabaseUrl = process.env.TEST_DATABASE_URL;
@@ -159,6 +167,41 @@ describeWithDatabase("processing integration", () => {
     ) {
       expect(secondResult.opportunityId).toBe(firstResult.opportunityId);
     }
+
+    const onExactDuplicate = vi.fn();
+    const discordDuplicate = createRawEventFixture({
+      source: "discord_manual",
+      source_account: "123",
+      source_event_id: "url-c",
+      source_url: "https://discord.com/channels/123/456/url-c",
+      text: `| Example Corp | Software Engineering Intern 🛂 | Remote US | [Apply](${url}?utm_campaign=three) | Jul 29 |`,
+      metadata: {
+        guild_id: "123",
+        channel_id: "456",
+        message_id: "101112",
+        forwarded: false,
+      },
+    });
+    await insertRawEvent(pool, {
+      event: discordDuplicate,
+      payloadSha256: payloadHash(discordDuplicate),
+      sourceConfigId: null,
+    });
+    const thirdResult = await processNextEvent(pool, {
+      provider: null,
+      onExactDuplicate,
+    });
+    expect(thirdResult).toMatchObject({
+      disposition: "processed",
+      created: false,
+      outboxCreated: false,
+    });
+    expect(onExactDuplicate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        channelId: "456",
+        messageId: "101112",
+      }),
+    );
 
     const opportunities = await pool.query<CountRow>(
       "SELECT count(*)::int AS count FROM aggregator.opportunities",

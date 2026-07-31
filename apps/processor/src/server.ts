@@ -4,6 +4,10 @@ import {
   type ServerResponse,
 } from "node:http";
 import { createDatabasePool } from "@recruiting-help/database";
+import {
+  OPPORTUNITY_DUPLICATE_REACTION,
+  requestBotMessageReaction,
+} from "@recruiting-help/discord";
 import { GeminiStructuredExtractionProvider } from "@recruiting-help/extraction";
 import {
   DEFAULT_AUTO_PUBLISH_CONFIDENCE,
@@ -78,7 +82,10 @@ function loadProcessingOptions(
   const confidence = Number(
     environment.AUTO_PUBLISH_CONFIDENCE ?? DEFAULT_AUTO_PUBLISH_CONFIDENCE,
   );
-  return {
+  const discordBotUrl = environment.DISCORD_BOT_URL?.trim();
+  const defaultIntakeChannelId =
+    environment.DISCORD_INTAKE_CHANNEL_ID?.trim() || undefined;
+  const options: ProcessNextEventOptions = {
     provider:
       apiKey === undefined || apiKey.length === 0
         ? null
@@ -90,6 +97,33 @@ function loadProcessingOptions(
       : DEFAULT_AUTO_PUBLISH_CONFIDENCE,
     resolveRedirects: environment.RESOLVE_REDIRECTS === "true",
   };
+  if (defaultIntakeChannelId !== undefined) {
+    options.defaultIntakeChannelId = defaultIntakeChannelId;
+  }
+  if (discordBotUrl !== undefined && discordBotUrl.length > 0) {
+    options.onExactDuplicate = async (input) => {
+      const result = await requestBotMessageReaction({
+        botBaseUrl: discordBotUrl,
+        channelId: input.channelId,
+        messageId: input.messageId,
+        emoji: OPPORTUNITY_DUPLICATE_REACTION,
+      });
+      console.info(
+        JSON.stringify({
+          level: result.ok ? "info" : "warn",
+          event: "exact_duplicate_intake_reaction",
+          ok: result.ok,
+          error: result.error ?? null,
+          raw_event_id: input.rawEventId,
+          opportunity_id: input.opportunityId,
+          channel_id: input.channelId,
+          message_id: input.messageId,
+          emoji: OPPORTUNITY_DUPLICATE_REACTION,
+        }),
+      );
+    };
+  }
+  return options;
 }
 
 const connectionString = process.env.DATABASE_URL;

@@ -103,6 +103,10 @@ services:
       AUTO_PUBLISH_CONFIDENCE: ${AUTO_PUBLISH_CONFIDENCE:-0.85}
       RESOLVE_REDIRECTS: ${RESOLVE_REDIRECTS:-false}
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      # Soft dependency: exact-dupe intake reactions call the bot when the
+      # discord profile is up; failures are logged and do not fail processing.
+      DISCORD_BOT_URL: http://discord-bot:3002
+      DISCORD_INTAKE_CHANNEL_ID: ${DISCORD_INTAKE_CHANNEL_ID:-}
     healthcheck:
       test:
         [
