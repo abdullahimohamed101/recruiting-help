@@ -6,6 +6,7 @@ import {
   canonicalizeApplicationUrl,
   extractEvidenceUrls,
   isPublicIpAddress,
+  pinnedLookup,
 } from "./urls.js";
 
 const MAX_BODY_BYTES = 512 * 1024;
@@ -51,9 +52,7 @@ const defaultFetchRequest: JobPageFetchRequest = (
           accept: "text/html,application/xhtml+xml",
           "user-agent": "recruiting-help-job-page-fetcher/1",
         },
-        lookup: (_hostname, _options, callback) => {
-          callback(null, address, family);
-        },
+        lookup: pinnedLookup(address, family),
       },
       (response) => {
         response.on("data", (chunk: Buffer) => {
@@ -366,9 +365,11 @@ async function resolvePublicAddress(
   ) {
     throw new Error("Job page resolves to a non-public address.");
   }
-  const publicAddress = addresses.find(({ address }) =>
-    isPublicIpAddress(address),
-  );
+  // Prefer IPv4 when available — some Docker networks have broken IPv6 egress.
+  const publicAddress =
+    addresses.find(
+      ({ address, family }) => family === 4 && isPublicIpAddress(address),
+    ) ?? addresses.find(({ address }) => isPublicIpAddress(address));
   if (publicAddress === undefined) {
     throw new Error("Job page resolves to a non-public address.");
   }
@@ -461,15 +462,38 @@ export async function enrichRawEventWithJobPages(
     try {
       const page = await fetchPage(url, options);
       if (page === null) {
+        console.error(
+          JSON.stringify({
+            level: "warn",
+            event: "job_page_fetch_empty",
+            url,
+          }),
+        );
         continue;
       }
       if (page.company === null && page.role === null) {
+        console.error(
+          JSON.stringify({
+            level: "warn",
+            event: "job_page_fetch_unparsed",
+            url,
+            final_url: page.finalUrl,
+          }),
+        );
         continue;
       }
       snapshots.push(formatJobPageSnapshot(page, url));
       enrichedUrls.push(url);
-    } catch {
+    } catch (error) {
       // Soft-fail: leave the original event for review/AI/URL heuristics.
+      console.error(
+        JSON.stringify({
+          level: "warn",
+          event: "job_page_fetch_failed",
+          url,
+          detail: error instanceof Error ? error.message : String(error),
+        }),
+      );
     }
   }
 

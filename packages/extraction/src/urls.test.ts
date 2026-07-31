@@ -3,6 +3,7 @@ import {
   canonicalizeApplicationUrl,
   extractStableJobIdentity,
   isPublicIpAddress,
+  pinnedLookup,
   resolveSafeRedirects,
   type RedirectRequest,
 } from "./urls.js";
@@ -39,6 +40,30 @@ describe("extractStableJobIdentity", () => {
     ],
   ])("extracts stable identity from %s", (url, expected) => {
     expect(extractStableJobIdentity(url)).toEqual(expected);
+  });
+});
+
+describe("pinnedLookup", () => {
+  it("returns an address list when Node requests all:true", () => {
+    const lookup = pinnedLookup("1.2.3.4", 4);
+    let result: unknown;
+    lookup("example.com", { all: true }, (_err, value) => {
+      result = value;
+    });
+    expect(result).toEqual([{ address: "1.2.3.4", family: 4 }]);
+  });
+
+  it("returns a single address when all is not set", () => {
+    const lookup = pinnedLookup("1.2.3.4", 4);
+    let address: unknown;
+    let family: unknown;
+    lookup("example.com", {}, (err, value, fam) => {
+      expect(err).toBeNull();
+      address = value;
+      family = fam;
+    });
+    expect(address).toBe("1.2.3.4");
+    expect(family).toBe(4);
   });
 });
 
