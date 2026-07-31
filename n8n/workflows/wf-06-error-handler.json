@@ -1,0 +1,86 @@
+{
+  "id": "Wf06ErrorHandler0001",
+  "name": "WF-06 Error Handler",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "e6a1b2c3-1111-4222-8333-444455556666",
+      "name": "Error Trigger",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\nconst workflowName = item.workflow?.name ?? item.workflow?.id ?? 'unknown_workflow';\nconst executionId = item.execution?.id ?? null;\nconst errorCategory = item.execution?.error?.message\n  ? 'workflow_execution_error'\n  : 'unknown_error';\nreturn [{\n  json: {\n    workflow_name: String(workflowName).slice(0, 200),\n    error_category: errorCategory,\n    attempt_count: null,\n    next_retry_at: null,\n    execution_url: executionId ? `execution://${executionId}` : null,\n    source_config_id: null\n  }\n}];"
+      },
+      "id": "e6a1b2c3-2222-4333-8444-555566667777",
+      "name": "Sanitize Alert",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [240, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://discord-bot:3002/v1/ops-alert",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          },
+          "timeout": 15000
+        }
+      },
+      "id": "e6a1b2c3-3333-4444-8555-666677778888",
+      "name": "Post Ops Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [480, 0]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Sanitize Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sanitize Alert": {
+      "main": [
+        [
+          {
+            "node": "Post Ops Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataErrorExecution": "none",
+    "saveDataSuccessExecution": "none",
+    "saveManualExecutions": false,
+    "saveExecutionProgress": false
+  },
+  "versionId": "e6a1b2c3-4444-4555-8666-777788889999",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": []
+}

@@ -1,0 +1,92 @@
+version: 1
+
+opportunity_scope:
+  employment_types:
+    - internship
+    - co_op
+    - new_grad
+  exclude_employment_types: []
+  years: all
+  seasons:
+    - spring
+    - summer
+    - fall
+    - winter
+  work_arrangements:
+    - remote
+    - hybrid
+    - onsite
+
+geography:
+  mode: allow_list
+  countries:
+    - US
+  allow_remote_us: true
+  allow_hybrid_us: true
+  allow_onsite_us: true
+  allow_ambiguous_remote: false
+  ambiguous_location_action: review
+  multi_location_match: any_allowed_location
+
+sponsorship:
+  mode: include_and_tag
+  statuses:
+    - unknown
+    - offers_or_considers
+    - does_not_offer
+    - us_citizenship_required
+  suppress_based_on_sponsorship: false
+
+status:
+  publish:
+    - open
+  store_without_publishing:
+    - closed
+    - possibly_removed
+  missing_application_url_action: review
+
+relevance:
+  positive_terms:
+    - internship
+    - intern
+    - co-op
+    - co op
+    - new grad
+    - new-grad
+    - early career
+    - application
+    - apply
+    - careers
+  negative_terms:
+    - senior software engineer
+    - staff software engineer
+    - principal engineer
+  require_url_or_strong_keyword_signal: true
+
+review:
+  missing_company: true
+  missing_role: true
+  missing_application_url: true
+  ambiguous_year: false
+  ambiguous_geography: true
+  fuzzy_duplicate: true
+  minimum_auto_publish_confidence: 0.85
+
+categorization:
+  # Used for labeling/sorting in the feed. Destination keys stay distinct by type.
+  labels:
+    internship: Internship
+    co_op: Co-op
+    new_grad: New Grad
+  sort_order:
+    internship: 1
+    co_op: 2
+    new_grad: 3
+
+ai:
+  provider: gemini
+  paid_overage_monthly_usd: 0
+  deterministic_first: true
+  local_ocr_before_vision: true
+  require_field_evidence: true
+  require_literal_source_url: true

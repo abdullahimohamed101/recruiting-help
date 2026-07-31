@@ -1,0 +1,14 @@
+{
+  "name": "@recruiting-help/processing",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@recruiting-help/contracts": "workspace:*",
+    "@recruiting-help/database": "workspace:*",
+    "@recruiting-help/extraction": "workspace:*"
+  }
+}

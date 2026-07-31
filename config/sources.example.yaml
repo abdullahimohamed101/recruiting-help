@@ -1,0 +1,99 @@
+version: 1
+
+# This file contains non-secret source configuration only.
+# Copy it to sources.yaml for local development. Never add credentials,
+# cookies, session data, browser profiles, or webhook secrets.
+
+sources:
+  - id: github-vanshb03-summer-2027
+    type: github
+    enabled: true
+    display_name: Vansh Summer 2027 Internships
+    repository: vanshb03/Summer2027-Internships
+    branch: dev
+    files:
+      - path: README.md
+        parser: vanshb03_markdown_table_v1
+        enabled: true
+      - path: OFFSEASON_README.md
+        parser: vanshb03_markdown_table_v1
+        enabled: false
+    poll_interval_seconds: 900
+    shadow_mode: true
+    parser_options:
+      table_headers:
+        - Company
+        - Role
+        - Location
+        - Application/Link
+        - Date Posted
+      inherited_company_marker: "↳"
+      sponsorship_markers:
+        "🛂": does_not_offer
+        "🇺🇸": us_citizenship_required
+      closed_marker: "🔒"
+
+  - id: discord-opportunities-primary
+    type: discord_browser
+    enabled: false
+    display_name: Primary Discord Opportunity Channel
+    guild_id: "1466113100465049753"
+    channel_id: "1466118296574365831"
+    channel_url: https://discord.com/channels/1466113100465049753/1466118296574365831
+    poll_interval_seconds: 180
+    shadow_mode: true
+    browser_profile: discord-alt
+    backfill:
+      enabled: true
+      max_messages: 250
+      max_duration_seconds: 300
+
+  - id: instagram-zero2sudo
+    type: instagram_browser
+    enabled: false
+    display_name: zero2sudo Instagram
+    username: zero2sudo
+    profile_url: https://www.instagram.com/zero2sudo/
+    poll_interval_seconds: 600
+    shadow_mode: true
+    browser_profile: instagram-alt
+    content:
+      posts: true
+      reels: true
+      stories: true
+    extraction:
+      local_ocr: true
+      vision_fallback: true
+      retain_review_media: true
+
+  - id: slack-colorstack-opportunities
+    type: slack
+    enabled: false
+    display_name: ColorStack Opportunity Channel
+    workspace: colorstack-family
+    channel_id: C011H0EFU14
+    channel_url: https://colorstack-family.slack.com/archives/C011H0EFU14
+    poll_interval_seconds: 300
+    shadow_mode: true
+    connector_preference:
+      - slack_api
+      - slack_browser
+    browser_profile: slack-member
+    threads:
+      fetch_after_root_relevance_filter: true
+
+manual_intake:
+  enabled: true
+  source: discord_manual
+  # Populate these after creating the operator-owned Discord server.
+  owned_guild_id: null
+  intake_channel_id: null
+
+destinations:
+  discord:
+    enabled: false
+    # Populate after creating the operator-owned Discord server.
+    guild_id: null
+    feed_channel_id: null
+    review_channel_id: null
+    ops_channel_id: null

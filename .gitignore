@@ -5,17 +5,41 @@
 
 # Node
 node_modules/
+.pnpm-store/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
 
 # Python
 __pycache__/
 *.py[cod]
 *.egg-info/
-.env
 venv/
 .venv/
+
+# Secrets and environment files
+.env
+.env.*
+!.env.example
+!infra/env.example
+*.pem
+*.key
+secrets/
+
+# Authenticated browser and runtime data
+browser-profiles/
+playwright/.auth/
+diagnostics/
+traces/
+.data/
+*.har
+
+# Tests and tooling
+coverage/
+.eslintcache
+test-results/
+playwright-report/
 
 # IDEs
 .vscode/
@@ -31,3 +55,9 @@ out/
 # Logs
 *.log
 logs/
+
+# Local backups
+backups/
+*.dump
+*.dump.gz
+*.sql.gz

@@ -1,0 +1,131 @@
+{
+  "id": "IprGpi1nGAoD1Jl9",
+  "name": "WF-02 Unified Signed Intake",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "unified-intake",
+        "responseMode": "responseNode",
+        "options": {
+          "rawBody": true
+        }
+      },
+      "id": "93b322a3-70fb-4dd3-a284-7970d0357774",
+      "name": "Signed Intake Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "5080766a-e73f-4c25-86da-10e921bd5b9c"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://intake-api:3000/v1/events",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "content-type",
+              "value": "application/json"
+            },
+            {
+              "name": "x-aggregator-caller",
+              "value": "={{ $json.headers[\"x-aggregator-caller\"] }}"
+            },
+            {
+              "name": "x-aggregator-timestamp",
+              "value": "={{ $json.headers[\"x-aggregator-timestamp\"] }}"
+            },
+            {
+              "name": "x-aggregator-nonce",
+              "value": "={{ $json.headers[\"x-aggregator-nonce\"] }}"
+            },
+            {
+              "name": "x-aggregator-signature",
+              "value": "={{ $json.headers[\"x-aggregator-signature\"] }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "binaryData",
+        "inputDataFieldName": "data",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "57b05ef9-afd0-4bb1-9cf0-d0207971fc4d",
+      "name": "Verify and Persist Internally",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        240,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json.body }}",
+        "options": {
+          "responseCode": "={{ $json.statusCode }}"
+        }
+      },
+      "id": "212f4dcb-f0ae-4612-8158-2273a7015b6b",
+      "name": "Return Intake Result",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        480,
+        0
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Signed Intake Webhook": {
+      "main": [
+        [
+          {
+            "node": "Verify and Persist Internally",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verify and Persist Internally": {
+      "main": [
+        [
+          {
+            "node": "Return Intake Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataErrorExecution": "none",
+    "saveDataSuccessExecution": "none",
+    "saveManualExecutions": false,
+    "saveExecutionProgress": false
+  },
+  "versionId": "b01bfab0-534d-4a4d-aa6d-e42806f85c70",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": []
+}

@@ -1,0 +1,17 @@
+{
+  "name": "@recruiting-help/processor",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "tsx src/server.ts"
+  },
+  "dependencies": {
+    "@recruiting-help/database": "workspace:*",
+    "@recruiting-help/extraction": "workspace:*",
+    "@recruiting-help/processing": "workspace:*"
+  },
+  "devDependencies": {
+    "tsx": "^4.23.1"
+  }
+}
