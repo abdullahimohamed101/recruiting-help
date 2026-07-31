@@ -126,9 +126,9 @@ services:
       DISCORD_FEED_CHANNEL_ID: ${DISCORD_FEED_CHANNEL_ID:?Set DISCORD_FEED_CHANNEL_ID}
       DISCORD_REVIEW_CHANNEL_ID: ${DISCORD_REVIEW_CHANNEL_ID:?Set DISCORD_REVIEW_CHANNEL_ID}
       DISCORD_OPS_CHANNEL_ID: ${DISCORD_OPS_CHANNEL_ID:?Set DISCORD_OPS_CHANNEL_ID}
-      # Always use the Compose network hostname. Host .env often sets
-      # http://127.0.0.1:5678 for local CLI scripts, which fails inside the bot container.
-      INTAKE_URL: http://n8n:5678/webhook/unified-intake
+      # Internal services call intake-api directly on the Compose network.
+      # Host-side CLI scripts still use INTAKE_URL → n8n webhook (127.0.0.1:5678).
+      INTAKE_URL: http://intake-api:3000/v1/events
       AGGREGATOR_CALLER_ID: ${DISCORD_BOT_CALLER_ID:-discord-bot-dev}
       AGGREGATOR_CALLER_SECRET: ${AGGREGATOR_CALLER_SECRET:-development-only-hmac-secret-replace-before-shared-use}
       PORT: 3002

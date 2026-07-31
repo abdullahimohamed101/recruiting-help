@@ -101,6 +101,7 @@ client.on("messageCreate", (message) => {
           event: "discord_intake_rejected",
           error: result.error,
           status_code: result.statusCode,
+          intake_url: config.intakeUrl,
         }),
       );
     } catch (error) {
@@ -110,6 +111,11 @@ client.on("messageCreate", (message) => {
           level: "error",
           event: "discord_intake_failed",
           detail: error instanceof Error ? error.message : "unknown",
+          cause:
+            error instanceof Error && error.cause instanceof Error
+              ? error.cause.message
+              : null,
+          intake_url: config.intakeUrl,
         }),
       );
     }
