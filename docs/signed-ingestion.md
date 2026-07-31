@@ -93,7 +93,11 @@ Place the generated value in:
 AGGREGATOR_CALLER_SECRET=...
 ```
 
-The development Compose file contains a clearly marked local-only caller fixture so the containerized smoke test is reproducible. Production has no default secret and requires `AGGREGATOR_CALLERS_JSON`.
+Development Compose passes `AGGREGATOR_CALLERS_JSON` from `.env` (with an inline
+default). Keep that value as **unquoted** JSON in `.env` — no surrounding
+`'`/`"` — and avoid macOS TextEdit smart quotes, which corrupt the string and
+crash `intake-api` on `JSON.parse`. Production also requires
+`AGGREGATOR_CALLERS_JSON`.
 
 Start services and migrate:
 

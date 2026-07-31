@@ -69,6 +69,8 @@ services:
     environment:
       NODE_ENV: development
       DATABASE_URL: postgresql://${POSTGRES_USER:-recruiting_help}:${POSTGRES_PASSWORD:-local-development-only}@postgres:5432/${POSTGRES_DB:-recruiting_help}
+      # Keep as ${VAR:-{json}} scalar (starts with $) so YAML does not parse the
+      # default as a mapping. Do not wrap this interpolation in extra quotes.
       AGGREGATOR_CALLERS_JSON: ${AGGREGATOR_CALLERS_JSON:-{"collector-dev":{"secret":"development-only-hmac-secret-replace-before-shared-use","allowed_sources":{"github":["vanshb03/Summer2027-Internships"]}},"discord-bot-dev":{"secret":"development-only-hmac-secret-replace-before-shared-use","allowed_sources":{"discord_manual":["replace-with-discord-guild-id"],"slack_manual":["discord-intake"],"instagram_manual":["discord-intake"]}}}}
       PORT: 3000
     healthcheck:
