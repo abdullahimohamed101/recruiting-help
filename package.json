@@ -36,16 +36,16 @@
     "secret:generate": "tsx scripts/generate-secret.ts",
     "db:migrate": "tsx scripts/migrate.ts up",
     "db:rollback:dev": "tsx scripts/migrate.ts down:all",
-    "n8n:export": "docker compose -f infra/compose.dev.yaml exec -T n8n n8n export:workflow --all --pretty",
-    "n8n:import": "docker compose -f infra/compose.dev.yaml exec -T n8n n8n import:workflow --separate --input=/repo-workflows",
-    "n8n:publish:wf02": "docker compose -f infra/compose.dev.yaml exec -T n8n n8n publish:workflow --id=IprGpi1nGAoD1Jl9",
-    "n8n:unpublish:wf02": "docker compose -f infra/compose.dev.yaml exec -T n8n n8n unpublish:workflow --id=IprGpi1nGAoD1Jl9",
-    "n8n:publish:wf03": "docker compose -f infra/compose.dev.yaml exec -T n8n n8n publish:workflow --id=Wf03ProcessRawEvents01",
-    "n8n:unpublish:wf03": "docker compose -f infra/compose.dev.yaml exec -T n8n n8n unpublish:workflow --id=Wf03ProcessRawEvents01",
-    "n8n:publish:wf04": "docker compose -f infra/compose.dev.yaml exec -T n8n n8n publish:workflow --id=Wf04DeliverDiscord01",
-    "n8n:unpublish:wf04": "docker compose -f infra/compose.dev.yaml exec -T n8n n8n unpublish:workflow --id=Wf04DeliverDiscord01",
-    "n8n:publish:wf06": "docker compose -f infra/compose.dev.yaml exec -T n8n n8n publish:workflow --id=Wf06ErrorHandler0001",
-    "n8n:unpublish:wf06": "docker compose -f infra/compose.dev.yaml exec -T n8n n8n unpublish:workflow --id=Wf06ErrorHandler0001"
+    "n8n:export": "docker compose --env-file .env -f infra/compose.dev.yaml exec -T n8n n8n export:workflow --all --pretty",
+    "n8n:import": "docker compose --env-file .env -f infra/compose.dev.yaml exec -T n8n n8n import:workflow --separate --input=/repo-workflows",
+    "n8n:publish:wf02": "docker compose --env-file .env -f infra/compose.dev.yaml exec -T n8n n8n publish:workflow --id=IprGpi1nGAoD1Jl9",
+    "n8n:unpublish:wf02": "docker compose --env-file .env -f infra/compose.dev.yaml exec -T n8n n8n unpublish:workflow --id=IprGpi1nGAoD1Jl9",
+    "n8n:publish:wf03": "docker compose --env-file .env -f infra/compose.dev.yaml exec -T n8n n8n publish:workflow --id=Wf03ProcessRawEvents01",
+    "n8n:unpublish:wf03": "docker compose --env-file .env -f infra/compose.dev.yaml exec -T n8n n8n unpublish:workflow --id=Wf03ProcessRawEvents01",
+    "n8n:publish:wf04": "docker compose --env-file .env -f infra/compose.dev.yaml exec -T n8n n8n publish:workflow --id=Wf04DeliverDiscord01",
+    "n8n:unpublish:wf04": "docker compose --env-file .env -f infra/compose.dev.yaml exec -T n8n n8n unpublish:workflow --id=Wf04DeliverDiscord01",
+    "n8n:publish:wf06": "docker compose --env-file .env -f infra/compose.dev.yaml exec -T n8n n8n publish:workflow --id=Wf06ErrorHandler0001",
+    "n8n:unpublish:wf06": "docker compose --env-file .env -f infra/compose.dev.yaml exec -T n8n n8n unpublish:workflow --id=Wf06ErrorHandler0001"
   },
   "dependencies": {
     "zod": "^4.4.3"
