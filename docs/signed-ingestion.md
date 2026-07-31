@@ -93,11 +93,11 @@ Place the generated value in:
 AGGREGATOR_CALLER_SECRET=...
 ```
 
-Development Compose does **not** pass `AGGREGATOR_CALLERS_JSON` into `intake-api`
-(Compose strips quotes from JSON in `.env`). Instead it passes scalar
-`AGGREGATOR_CALLER_SECRET` and `DISCORD_GUILD_ID`; `intake-api` builds the local
-`collector-dev` + `discord-bot-dev` registry in-process. Production still
-requires `AGGREGATOR_CALLERS_JSON`.
+Development Compose passes `AGGREGATOR_CALLERS_JSON` from `.env` (with an inline
+default). Keep that value as **unquoted** JSON in `.env` — no surrounding
+`'`/`"` — and avoid macOS TextEdit smart quotes, which corrupt the string and
+crash `intake-api` on `JSON.parse`. Production also requires
+`AGGREGATOR_CALLERS_JSON`.
 
 Start services and migrate:
 

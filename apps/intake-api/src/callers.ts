@@ -6,15 +6,10 @@ type ExternalCallerConfig = {
   allowed_sources?: unknown;
 };
 
-const DEFAULT_GITHUB_ACCOUNTS = ["vanshb03/Summer2027-Internships"] as const;
-
 function parseCallerConfig(
   callerId: string,
   unvalidatedConfig: unknown,
-): {
-  secret: string;
-  allowedSources: Partial<Record<SourceType, string[]>>;
-} {
+): CallerConfig {
   const config = unvalidatedConfig as ExternalCallerConfig;
   if (typeof config.secret !== "string" || config.secret.length < 32) {
     throw new Error(
@@ -62,111 +57,83 @@ function callersFromObject(parsed: unknown): CallerRegistry {
   return callers;
 }
 
-function githubAccountsFromEnv(environment: NodeJS.ProcessEnv): string[] {
-  const serialized = environment.AGGREGATOR_ALLOWED_SOURCES_JSON?.trim();
-  if (serialized === undefined || serialized.length === 0) {
-    return [...DEFAULT_GITHUB_ACCOUNTS];
-  }
-  try {
-    const parsed: unknown = JSON.parse(serialized);
-    if (
-      parsed === null ||
-      typeof parsed !== "object" ||
-      Array.isArray(parsed)
-    ) {
-      return [...DEFAULT_GITHUB_ACCOUNTS];
-    }
-    const github = (parsed as { github?: unknown }).github;
-    if (
-      Array.isArray(github) &&
-      github.length > 0 &&
-      github.every(
-        (account) => typeof account === "string" && account.length > 0,
-      )
-    ) {
-      return github as string[];
-    }
-  } catch {
-    // Compose often strips quotes from JSON in .env; keep the default allow-list.
-  }
-  return [...DEFAULT_GITHUB_ACCOUNTS];
-}
+function describeInvalidJson(serialized: string, detail: string): string {
+  const preview = serialized.slice(0, 120);
+  const nonAscii = [...serialized]
+    .map((char, index) =>
+      char.charCodeAt(0) > 127
+        ? `${index}:U+${char.charCodeAt(0).toString(16)}`
+        : null,
+    )
+    .filter((value): value is string => value !== null)
+    .slice(0, 8);
 
-/**
- * Local Compose fixture: collector + Discord bot callers from scalar env vars.
- * Avoids AGGREGATOR_CALLERS_JSON in Compose — Docker strips quotes from .env JSON.
- */
-export function buildDevelopmentCallerRegistry(
-  environment: NodeJS.ProcessEnv,
-): CallerRegistry {
-  const secret = environment.AGGREGATOR_CALLER_SECRET;
-  if (typeof secret !== "string" || secret.length < 32) {
-    throw new Error(
-      "AGGREGATOR_CALLER_SECRET must be at least 32 characters for the development caller registry.",
+  const hints: string[] = [];
+  if (
+    (serialized.startsWith("'") && serialized.endsWith("'")) ||
+    (serialized.startsWith('"') && serialized.endsWith('"'))
+  ) {
+    hints.push(
+      "value appears wrapped in quotes — use unquoted JSON in .env (AGGREGATOR_CALLERS_JSON={...})",
+    );
+  }
+  if (nonAscii.length > 0) {
+    hints.push(
+      `non-ASCII characters detected (${nonAscii.join(", ")}) — macOS TextEdit smart quotes corrupt JSON; edit with nano/vim or disable smart quotes`,
+    );
+  }
+  if (serialized.includes("map[")) {
+    hints.push(
+      "value looks like a Go map dump — Compose parsed JSON as YAML; keep the ${AGGREGATOR_CALLERS_JSON:-{...}} form as a single scalar",
     );
   }
 
-  const collectorId =
-    environment.AGGREGATOR_CALLER_ID?.trim() || "collector-dev";
-  const botCallerId =
-    environment.DISCORD_BOT_CALLER_ID?.trim() || "discord-bot-dev";
-  const guildId = environment.DISCORD_GUILD_ID?.trim() || "000000000000000000";
-
-  return {
-    [collectorId]: {
-      secret,
-      allowedSources: {
-        github: githubAccountsFromEnv(environment),
-      },
-    },
-    [botCallerId]: {
-      secret,
-      allowedSources: {
-        discord_manual: [guildId],
-        slack_manual: ["discord-intake"],
-        instagram_manual: ["discord-intake"],
-      },
-    },
-  };
+  return [
+    `AGGREGATOR_CALLERS_JSON is invalid JSON (${detail}).`,
+    `preview=${JSON.stringify(preview)}`,
+    ...hints,
+  ].join(" ");
 }
 
+/**
+ * Load the caller allow-list.
+ *
+ * Primary path (Compose + production): AGGREGATOR_CALLERS_JSON.
+ * Development fallback: single-caller ID/secret/allowed-sources scalars.
+ */
 export function loadCallerRegistry(
   environment: NodeJS.ProcessEnv,
 ): CallerRegistry {
-  const serialized = environment.AGGREGATOR_CALLERS_JSON?.trim();
-  if (serialized !== undefined && serialized.length > 0) {
-    try {
-      return callersFromObject(JSON.parse(serialized) as unknown);
-    } catch (error) {
-      const detail = error instanceof Error ? error.message : String(error);
-      // Development Compose historically passed mangled JSON from .env (quotes stripped).
-      if (
-        environment.NODE_ENV === "development" &&
-        typeof environment.AGGREGATOR_CALLER_SECRET === "string"
-      ) {
-        console.error(
-          JSON.stringify({
-            level: "warn",
-            event: "aggregator_callers_json_invalid",
-            message:
-              "Ignoring invalid AGGREGATOR_CALLERS_JSON; building callers from AGGREGATOR_CALLER_SECRET and DISCORD_GUILD_ID. Remove AGGREGATOR_CALLERS_JSON from .env for Docker Compose.",
-            parse_error: detail,
-            preview: serialized.slice(0, 96),
-          }),
-        );
-        return buildDevelopmentCallerRegistry(environment);
-      }
+  let serialized = environment.AGGREGATOR_CALLERS_JSON?.trim();
+
+  if (serialized === undefined || serialized.length === 0) {
+    const callerId = environment.AGGREGATOR_CALLER_ID;
+    const secret = environment.AGGREGATOR_CALLER_SECRET;
+    const allowedSources = environment.AGGREGATOR_ALLOWED_SOURCES_JSON;
+    if (
+      callerId === undefined ||
+      secret === undefined ||
+      allowedSources === undefined
+    ) {
       throw new Error(
-        `AGGREGATOR_CALLERS_JSON is invalid JSON (${detail}). For Docker Compose, omit AGGREGATOR_CALLERS_JSON and set AGGREGATOR_CALLER_SECRET + DISCORD_GUILD_ID instead.`,
+        "Provide AGGREGATOR_CALLERS_JSON or the complete single-caller development configuration (AGGREGATOR_CALLER_ID, AGGREGATOR_CALLER_SECRET, AGGREGATOR_ALLOWED_SOURCES_JSON).",
       );
     }
+    serialized = JSON.stringify({
+      [callerId]: {
+        secret,
+        allowed_sources: JSON.parse(allowedSources) as unknown,
+      },
+    });
   }
 
-  if (typeof environment.AGGREGATOR_CALLER_SECRET === "string") {
-    return buildDevelopmentCallerRegistry(environment);
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(serialized) as unknown;
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    throw new Error(describeInvalidJson(serialized, detail));
   }
 
-  throw new Error(
-    "Provide AGGREGATOR_CALLERS_JSON, or AGGREGATOR_CALLER_SECRET (development Compose builds collector + discord callers from scalar env).",
-  );
+  return callersFromObject(parsed);
 }
