@@ -25,7 +25,7 @@
     "infra:reset": "docker compose -f infra/compose.dev.yaml down --volumes",
     "infra:status": "docker compose -f infra/compose.dev.yaml ps",
     "infra:logs": "docker compose -f infra/compose.dev.yaml logs",
-    "infra:config": "docker compose -f infra/compose.dev.yaml config",
+    "infra:config": "docker compose --env-file infra/env.example -f infra/compose.dev.yaml config",
     "prod:config": "docker compose --env-file .env.production -f infra/compose.prod.yaml config",
     "intake:dev": "tsx apps/intake-api/src/server.ts",
     "intake:send": "tsx scripts/send-test-event.ts",
