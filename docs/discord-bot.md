@@ -43,7 +43,7 @@ Required for `corepack pnpm bot:dev` or Compose `--profile discord`:
 - `DISCORD_REVIEW_CHANNEL_ID`
 - `DISCORD_OPS_CHANNEL_ID`
 - `DATABASE_URL`
-- `INTAKE_URL` (Compose pins the bot to `http://intake-api:3000/v1/events`; host CLI scripts use the n8n webhook)
+- `INTAKE_URL` (Compose pins the bot to WF-02: `http://n8n:5678/webhook/unified-intake`; do not reuse the host `127.0.0.1` CLI value inside the bot container)
 - `AGGREGATOR_CALLER_ID` / `AGGREGATOR_CALLER_SECRET`
 
 Allow-list the bot caller for:
