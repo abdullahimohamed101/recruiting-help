@@ -44,7 +44,7 @@ export function validateCandidateEvidence(
     return (
       fragment === undefined ||
       fragment.length === 0 ||
-      !sourceText.includes(fragment)
+      !sourceText.toLowerCase().includes(fragment.toLowerCase())
     );
   });
 

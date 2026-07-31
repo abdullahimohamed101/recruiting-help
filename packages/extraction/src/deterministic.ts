@@ -149,6 +149,20 @@ function inferEmploymentType(
   return null;
 }
 
+function findEvidenceFragment(
+  sourceText: string,
+  needle: string,
+): string | null {
+  if (needle.length === 0) {
+    return null;
+  }
+  const index = sourceText.toLowerCase().indexOf(needle.toLowerCase());
+  if (index < 0) {
+    return null;
+  }
+  return sourceText.slice(index, index + needle.length);
+}
+
 function evidenceForCandidate(input: {
   sourceText: string;
   company: string | null;
@@ -462,25 +476,28 @@ function parseJobApplicationUrlOpportunity(
     postedAt: null,
     postedEvidence: null,
   });
-  // Humanized company/role may not appear literally in the URL; keep path tokens as evidence.
+  // Humanized company/role may not appear literally in the URL; keep path tokens
+  // as evidence using the exact substring from source (URLs are often lowercase).
   if (company !== null) {
-    const companyToken = company.replaceAll(" ", "");
-    if (contextText.includes(companyToken)) {
-      evidence.company = companyToken;
-    } else if (contextText.includes(company)) {
-      evidence.company = company;
-    } else {
+    const companyEvidence =
+      findEvidenceFragment(contextText, company.replaceAll(" ", "")) ??
+      findEvidenceFragment(contextText, company);
+    if (companyEvidence === null) {
       delete evidence.company;
+    } else {
+      evidence.company = companyEvidence;
     }
   }
   if (role !== null) {
-    const roleToken = role.toLowerCase().replaceAll(" ", "-");
-    if (contextText.toLowerCase().includes(roleToken)) {
-      evidence.role = roleToken;
-    } else if (contextText.includes(role)) {
-      evidence.role = role;
-    } else {
+    const roleEvidence =
+      findEvidenceFragment(
+        contextText,
+        role.toLowerCase().replaceAll(" ", "-"),
+      ) ?? findEvidenceFragment(contextText, role);
+    if (roleEvidence === null) {
       delete evidence.role;
+    } else {
+      evidence.role = roleEvidence;
     }
   }
 
