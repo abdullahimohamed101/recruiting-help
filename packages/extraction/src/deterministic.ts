@@ -4,6 +4,7 @@ import {
   type RawEvent,
 } from "@recruiting-help/contracts";
 import { extractEvidenceUrls } from "./urls.js";
+import { oneLineExcerpt } from "./work-mode.js";
 
 export type DeterministicExtraction = {
   candidate: OpportunityCandidate;
@@ -337,6 +338,27 @@ function parseLabeledOpportunity(
   const { year, season } = inferSeasonAndYear({ primaryText, fallbackText });
   const employmentType = inferEmploymentType(contextText);
   const sponsorshipStatus = sponsorshipFromText(contextText);
+  const postedLabel = labeledValue(sourceText, "posted|date posted|posted at");
+  let postedAt: string | null = null;
+  let postedEvidence: string | null = null;
+  if (postedLabel !== null) {
+    const isoDay = postedLabel.match(/^(\d{4}-\d{2}-\d{2})/u)?.[1];
+    if (isoDay !== undefined) {
+      postedAt = `${isoDay}T00:00:00.000Z`;
+      postedEvidence = isoDay;
+    } else {
+      const parsed = new Date(postedLabel);
+      if (!Number.isNaN(parsed.getTime())) {
+        postedAt = parsed.toISOString();
+        postedEvidence = postedLabel;
+      }
+    }
+  }
+  const excerptLabel =
+    labeledValue(sourceText, "excerpt|summary") ??
+    labeledValue(sourceText, "description");
+  const descriptionExcerpt =
+    excerptLabel === null ? null : oneLineExcerpt(excerptLabel, 2_000);
   const evidence = evidenceForCandidate({
     sourceText: contextText,
     company,
@@ -347,9 +369,22 @@ function parseLabeledOpportunity(
     employmentType,
     sponsorshipStatus,
     applicationUrl,
-    postedAt: null,
-    postedEvidence: null,
+    postedAt,
+    postedEvidence,
   });
+  if (descriptionExcerpt !== null) {
+    const fragment =
+      findEvidenceFragment(contextText, descriptionExcerpt.slice(0, 80)) ??
+      descriptionExcerpt.slice(0, 80);
+    evidence.description_excerpt = fragment;
+  }
+  const workModeLabel = labeledValue(
+    sourceText,
+    "work mode|workmode|workplace type",
+  );
+  if (workModeLabel !== null) {
+    evidence.work_mode = workModeLabel;
+  }
 
   return {
     candidate: OpportunityCandidateSchema.parse({
@@ -363,9 +398,9 @@ function parseLabeledOpportunity(
       sponsorship_status: sponsorshipStatus,
       application_url: applicationUrl,
       deadline: null,
-      posted_at: null,
+      posted_at: postedAt,
       source_url: event.source_url,
-      description_excerpt: null,
+      description_excerpt: descriptionExcerpt,
       confidence:
         company !== null && role !== null && applicationUrl !== null
           ? 0.96

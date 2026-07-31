@@ -18,26 +18,72 @@ describe("discord markdown safety", () => {
 });
 
 describe("embed builders", () => {
-  it("builds a feed message with disabled mentions and category label", () => {
+  it("builds a lean feed message without empty deadline/sponsorship/confidence", () => {
+    const message = buildFeedMessage({
+      opportunityId: "11111111-1111-4111-8111-111111111111",
+      company: "Rippling",
+      role: "Machine Learning Software Engineer Intern - Winter 2027",
+      locations: ["San Francisco, CA"],
+      season: "winter",
+      year: 2027,
+      employmentType: "internship",
+      categoryLabel: "Internship",
+      workMode: null,
+      sponsorshipStatus: "unknown",
+      applicationUrl: "https://ats.rippling.com/rippling/jobs/abc",
+      deadline: null,
+      postedAt: "2026-05-13T09:44:09.324Z",
+      descriptionExcerpt:
+        "About the Role At Rippling, Engineering is at the heart of our business and culture.",
+      sourceUrl: "https://discord.com/channels/1/2/3",
+      confidence: 0.99,
+    });
+    expect(message.allowed_mentions).toEqual({ parse: [] });
+    expect(message.embeds[0]?.title).toContain("Rippling");
+    expect(message.embeds[0]?.description).toContain("Internship");
+    expect(message.embeds[0]?.description).toContain("San Francisco, CA");
+    expect(message.embeds[0]?.url).toBe(
+      "https://ats.rippling.com/rippling/jobs/abc",
+    );
+    const fieldNames = (message.embeds[0]?.fields ?? []).map(
+      (entry) => entry.name,
+    );
+    expect(fieldNames).toContain("Posted");
+    expect(fieldNames).toContain("About");
+    expect(fieldNames).not.toContain("Deadline");
+    expect(fieldNames).not.toContain("Sponsorship");
+    expect(fieldNames).not.toContain("Confidence");
+    expect(
+      message.embeds[0]?.fields?.find((f) => f.name === "Posted")?.value,
+    ).toBe("May 13, 2026");
+    expect(
+      message.embeds[0]?.fields?.find((f) => f.name === "About")?.value,
+    ).toContain("At Rippling, Engineering is at the heart");
+  });
+
+  it("includes work mode in the subtitle when present", () => {
     const message = buildFeedMessage({
       opportunityId: "11111111-1111-4111-8111-111111111111",
       company: "Example Corp",
       role: "Software Engineering Intern",
-      locations: ["Remote US"],
+      locations: ["New York, NY"],
       season: "summer",
       year: 2027,
       employmentType: "internship",
       categoryLabel: "Internship",
-      sponsorshipStatus: "unknown",
+      workMode: "Hybrid",
+      sponsorshipStatus: "does_not_offer",
       applicationUrl: "https://jobs.example.com/1",
-      deadline: null,
-      sourceUrl: "https://github.com/example/repo",
-      confidence: 0.99,
+      deadline: "2026-08-01",
+      sourceUrl: null,
+      confidence: 0.9,
     });
-    expect(message.allowed_mentions).toEqual({ parse: [] });
-    expect(message.embeds[0]?.title).toContain("Example Corp");
-    expect(message.embeds[0]?.description).toContain("Internship");
-    expect(message.embeds[0]?.url).toBe("https://jobs.example.com/1");
+    expect(message.embeds[0]?.description).toContain("Hybrid");
+    const fieldNames = (message.embeds[0]?.fields ?? []).map(
+      (entry) => entry.name,
+    );
+    expect(fieldNames).toContain("Deadline");
+    expect(fieldNames).toContain("Sponsorship");
   });
 
   it("builds review and ops embeds without embedding secrets", () => {

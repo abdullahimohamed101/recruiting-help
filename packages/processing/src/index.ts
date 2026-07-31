@@ -30,6 +30,7 @@ import {
   resolveSafeRedirects,
   reviewReasonsForCandidate,
   validateCandidateEvidence,
+  inferWorkMode,
   type StructuredExtractionProvider,
 } from "@recruiting-help/extraction";
 
@@ -116,6 +117,13 @@ function auditFromExtraction(input: {
 function buildOutboxPayload(
   opportunity: PreparedOpportunity,
 ): Record<string, unknown> {
+  const workMode = inferWorkMode(
+    opportunity.locations,
+    [
+      opportunity.descriptionExcerpt ?? "",
+      Object.values(opportunity.evidence).join("\n"),
+    ].join("\n"),
+  );
   return {
     company: opportunity.company,
     role: opportunity.role,
@@ -125,9 +133,12 @@ function buildOutboxPayload(
     employment_type: opportunity.employmentType,
     category_label: employmentTypeLabel(opportunity.employmentType),
     sort_order: employmentTypeSortOrder(opportunity.employmentType),
+    work_mode: workMode,
     sponsorship_status: opportunity.sponsorshipStatus,
     application_url: opportunity.applicationUrl,
     deadline: opportunity.deadline,
+    posted_at: opportunity.postedAt,
+    description_excerpt: opportunity.descriptionExcerpt,
     source_url: opportunity.sourceUrl,
     confidence: opportunity.confidence,
   };

@@ -31,9 +31,12 @@ export type FeedEmbedInput = {
   year: number | null;
   employmentType: string | null;
   categoryLabel?: string | null;
+  workMode?: string | null;
   sponsorshipStatus: string | null;
   applicationUrl: string | null;
   deadline: string | null;
+  postedAt?: string | null;
+  descriptionExcerpt?: string | null;
   sourceUrl: string | null;
   confidence: number | null;
   discoveredAt?: string | null;
@@ -73,19 +76,6 @@ function field(
   };
 }
 
-function confidenceLabel(confidence: number | null): string {
-  if (confidence === null) {
-    return "Unknown";
-  }
-  if (confidence >= 0.85) {
-    return "High";
-  }
-  if (confidence >= 0.6) {
-    return "Medium";
-  }
-  return "Low";
-}
-
 function seasonYearLine(
   season: string | null,
   year: number | null,
@@ -97,6 +87,73 @@ function seasonYearLine(
     return `${season[0]?.toUpperCase() ?? ""}${season.slice(1)} ${year}`;
   }
   return season ?? year?.toString() ?? null;
+}
+
+function formatPostedLabel(postedAt: string | null | undefined): string | null {
+  if (
+    postedAt === null ||
+    postedAt === undefined ||
+    postedAt.trim().length === 0
+  ) {
+    return null;
+  }
+  const date = new Date(postedAt);
+  if (Number.isNaN(date.getTime())) {
+    const bare = postedAt.match(/^(\d{4})-(\d{2})-(\d{2})$/u);
+    if (bare === null) {
+      return null;
+    }
+    const parsed = new Date(
+      Date.UTC(Number(bare[1]), Number(bare[2]) - 1, Number(bare[3])),
+    );
+    if (Number.isNaN(parsed.getTime())) {
+      return null;
+    }
+    return parsed.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      timeZone: "UTC",
+    });
+  }
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+}
+
+function sponsorshipLabel(status: string | null): string | null {
+  if (status === null || status === "unknown") {
+    return null;
+  }
+  switch (status) {
+    case "does_not_offer":
+      return "Does not offer";
+    case "us_citizenship_required":
+      return "US citizenship required";
+    case "offers":
+      return "Offers sponsorship";
+    default:
+      return status;
+  }
+}
+
+function oneLineAbout(excerpt: string | null | undefined): string | null {
+  if (excerpt === null || excerpt === undefined) {
+    return null;
+  }
+  let text = excerpt.replace(/\s+/gu, " ").trim();
+  text = text.replace(
+    /^(?:about the role|about this role|the role)\s*[:\-–]?\s*/iu,
+    "",
+  );
+  if (text.length === 0) {
+    return null;
+  }
+  const sentence = text.match(/^(.+?[.!?])(?:\s|$)/u)?.[1] ?? text;
+  return sentence.trim().slice(0, 180);
 }
 
 export function buildFeedMessage(input: FeedEmbedInput): DiscordMessagePayload {
@@ -113,12 +170,19 @@ export function buildFeedMessage(input: FeedEmbedInput): DiscordMessagePayload {
     input.locations.length > 0
       ? escapeDiscordMarkdown(input.locations.join(" · "))
       : null,
+    input.workMode !== null &&
+    input.workMode !== undefined &&
+    input.workMode.trim().length > 0
+      ? escapeDiscordMarkdown(input.workMode.trim())
+      : null,
   ].filter((value): value is string => value !== null && value.length > 0);
 
+  const about = oneLineAbout(input.descriptionExcerpt ?? null);
   const fields = [
-    field("Deadline", input.deadline ?? "Not specified"),
-    field("Sponsorship", input.sponsorshipStatus ?? "unknown"),
-    field("Confidence", confidenceLabel(input.confidence)),
+    field("Posted", formatPostedLabel(input.postedAt ?? null)),
+    field("Deadline", input.deadline),
+    field("Sponsorship", sponsorshipLabel(input.sponsorshipStatus)),
+    field("About", about, false),
     field("Source", input.sourceUrl, false),
   ].filter((value): value is DiscordEmbedField => value !== null);
 
