@@ -98,6 +98,31 @@ describe("deterministic extraction", () => {
     });
   });
 
+  it("parses SmartRecruiters Discord URL pastes into company/role", () => {
+    const event = makeEvent(
+      "https://jobs.smartrecruiters.com/WesternDigital/744000120516378-summer-2026-intern-it-software-engineering?src=JB-10069",
+    );
+    event.source = "discord_manual";
+    event.source_account = "222";
+    event.metadata = {
+      guild_id: "222",
+      channel_id: "333",
+      message_id: "444",
+      forwarded: false,
+    };
+    const result = extractDeterministically(event);
+    expect(result?.parserVersion).toBe("job-application-url-v1");
+    expect(result?.candidate).toMatchObject({
+      company: "Western Digital",
+      role: "Summer 2026 Intern It Software Engineering",
+      season: "summer",
+      year: 2026,
+      employment_type: "internship",
+      application_url:
+        "https://jobs.smartrecruiters.com/WesternDigital/744000120516378-summer-2026-intern-it-software-engineering?src=JB-10069",
+    });
+  });
+
   it("preserves unknown fields as null and routes low confidence to review", () => {
     const event = makeEvent(
       "Company: Example Corp\nRole: Software Intern\nApplications are open",
