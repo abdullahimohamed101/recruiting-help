@@ -48,6 +48,7 @@ export {
   extractLiteralUrls,
   extractStableJobIdentity,
   isPublicIpAddress,
+  pinnedLookup,
   resolveSafeRedirects,
   type RedirectRequest,
   type StableJobIdentity,

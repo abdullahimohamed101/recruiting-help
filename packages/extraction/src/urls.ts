@@ -173,6 +173,36 @@ export type RedirectRequest = (
   timeoutMs: number,
 ) => Promise<{ status: number; location: string | null }>;
 
+/**
+ * Node may call custom lookup with `{ all: true }`, which expects
+ * `callback(err, [{ address, family }])` instead of `(err, address, family)`.
+ */
+export function pinnedLookup(
+  address: string,
+  family: 4 | 6,
+): (
+  hostname: string,
+  options: unknown,
+  callback: (
+    err: NodeJS.ErrnoException | null,
+    address: string | Array<{ address: string; family: number }>,
+    family?: number,
+  ) => void,
+) => void {
+  return (_hostname, options, callback) => {
+    const all =
+      typeof options === "object" &&
+      options !== null &&
+      "all" in options &&
+      (options as { all?: boolean }).all === true;
+    if (all) {
+      callback(null, [{ address, family }]);
+      return;
+    }
+    callback(null, address, family);
+  };
+}
+
 const requestRedirect: RedirectRequest = (url, address, family, timeoutMs) =>
   new Promise((resolve, reject) => {
     const request = httpsRequest(
@@ -182,9 +212,7 @@ const requestRedirect: RedirectRequest = (url, address, family, timeoutMs) =>
         headers: {
           "user-agent": "recruiting-help-redirect-resolver/1",
         },
-        lookup: (_hostname, _options, callback) => {
-          callback(null, address, family);
-        },
+        lookup: pinnedLookup(address, family),
       },
       (response) => {
         response.resume();
