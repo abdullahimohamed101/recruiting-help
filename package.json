@@ -9,13 +9,13 @@
     "node": ">=22"
   },
   "scripts": {
-    "check": "corepack pnpm format:check && corepack pnpm lint && corepack pnpm typecheck && corepack pnpm test",
+    "check": "corepack pnpm format:check && corepack pnpm lint && corepack pnpm typecheck && corepack pnpm test && corepack pnpm test:integration",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run --passWithNoTests",
-    "test:integration": "vitest run --no-file-parallelism packages/database/src/database.integration.test.ts packages/database/src/delivery.integration.test.ts packages/processing/src/processing.integration.test.ts",
+    "test": "vitest run --passWithNoTests --exclude '**/*.integration.test.ts'",
+    "test:integration": "vitest run --no-file-parallelism --maxWorkers=1 packages/database/src/database.integration.test.ts packages/database/src/delivery.integration.test.ts packages/processing/src/processing.integration.test.ts",
     "test:watch": "vitest",
     "env:check": "tsx scripts/validate-env.ts",
     "env:check:production": "tsx scripts/validate-env.ts --mode production",
