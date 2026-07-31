@@ -479,3 +479,66 @@ export async function persistProcessedOpportunity(
     return { opportunityId, created, outboxCreated };
   });
 }
+
+export async function persistReviewOpportunity(
+  pool: Pool,
+  input: Pick<
+    ProcessingWorkItem,
+    "rawEventId" | "processingRunId" | "leaseToken"
+  > & {
+    opportunity: PreparedOpportunity;
+    observedAt: string;
+    audit: ProcessingAudit;
+    reviewReasons: ReviewReason[];
+    destinationKey?: string;
+    outboxPayload: Record<string, unknown>;
+  },
+): Promise<PersistProcessedOpportunityResult> {
+  return withTransaction(pool, async (client) => {
+    await assertLease(client, input);
+    const reviewOpportunity: PreparedOpportunity = {
+      ...input.opportunity,
+      needsReview: true,
+      status: "active",
+    };
+    const opportunity = await createOpportunity(client, reviewOpportunity);
+    const delivery = await enqueueDelivery(client, {
+      opportunityId: opportunity.id,
+      destinationType: "discord_review",
+      destinationKey: input.destinationKey ?? "aggregator-review",
+      payload: input.outboxPayload,
+    });
+    await linkOpportunitySource(client, {
+      opportunityId: opportunity.id,
+      rawEventId: input.rawEventId,
+      sourceUrl: reviewOpportunity.sourceUrl,
+      observedAt: input.observedAt,
+    });
+    const updated = await client.query(
+      `
+        UPDATE aggregator.raw_events
+        SET
+          status = 'review',
+          lease_expires_at = NULL,
+          lease_token = NULL
+        WHERE id = $1 AND lease_token = $2
+      `,
+      [input.rawEventId, input.leaseToken],
+    );
+    if (updated.rowCount !== 1) {
+      throw new ProcessingLeaseLostError();
+    }
+    await finishRun(client, {
+      processingRunId: input.processingRunId,
+      opportunityId: opportunity.id,
+      status: "review",
+      reviewReasons: input.reviewReasons,
+      audit: input.audit,
+    });
+    return {
+      opportunityId: opportunity.id,
+      created: true,
+      outboxCreated: delivery.inserted,
+    };
+  });
+}

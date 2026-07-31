@@ -48,6 +48,12 @@ const productionSchema = sharedSchema.extend({
     }
   }, "Must be a JSON object"),
   DISCORD_BOT_TOKEN: z.string().min(1),
+  DISCORD_GUILD_ID: z.string().regex(/^\d+$/),
+  DISCORD_INTAKE_CHANNEL_ID: z.string().regex(/^\d+$/),
+  DISCORD_FEED_CHANNEL_ID: z.string().regex(/^\d+$/),
+  DISCORD_REVIEW_CHANNEL_ID: z.string().regex(/^\d+$/),
+  DISCORD_OPS_CHANNEL_ID: z.string().regex(/^\d+$/),
+  DISCORD_BOT_CALLER_SECRET: z.string().min(32),
   GEMINI_API_KEY: z.string().min(1),
   INTAKE_HMAC_SECRET: z.string().min(32),
   BACKUP_BUCKET: z.string().min(1),

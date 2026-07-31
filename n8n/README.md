@@ -16,3 +16,5 @@ Implemented:
 
 - `WF-02 Unified Signed Intake`
 - `WF-03 Process Raw Events`
+- `WF-04 Deliver Discord Outbox`
+- `WF-06 Error Handler`

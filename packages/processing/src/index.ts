@@ -10,6 +10,7 @@ import {
   failRawEventProcessing,
   findFuzzyOpportunityCandidates,
   persistProcessedOpportunity,
+  persistReviewOpportunity,
   type Pool,
   type PreparedOpportunity,
   type ProcessingAudit,
@@ -199,28 +200,112 @@ async function prepareOpportunity(
   };
 }
 
+function buildReviewOutboxPayload(input: {
+  opportunity: PreparedOpportunity;
+  reviewReasons: ReviewReason[];
+  excerpt: string | null;
+}): Record<string, unknown> {
+  return {
+    ...buildOutboxPayload(input.opportunity),
+    review_reasons: input.reviewReasons,
+    description_excerpt: input.excerpt,
+  };
+}
+
+function minimalReviewOpportunity(
+  work: ProcessingWorkItem,
+  candidate: OpportunityCandidate | null,
+): PreparedOpportunity {
+  if (candidate !== null) {
+    const fingerprint = createOpportunityFingerprint({
+      candidate,
+      stableJobIdentity: null,
+    });
+    return {
+      company: candidate.company,
+      role: candidate.role,
+      locations: candidate.locations,
+      season: candidate.season,
+      year: candidate.year,
+      employmentType: candidate.employment_type,
+      sponsorshipStatus: candidate.sponsorship_status,
+      applicationUrl: candidate.application_url,
+      deadline: candidate.deadline,
+      postedAt: candidate.posted_at,
+      sourceUrl: candidate.source_url ?? work.event.source_url,
+      descriptionExcerpt: candidate.description_excerpt,
+      evidence: candidate.evidence,
+      canonicalUrl: null,
+      canonicalUrlHash: null,
+      fingerprint: fingerprint.fingerprint,
+      stableJobBoard: null,
+      stableJobId: null,
+      normalizedCompany: fingerprint.normalizedCompany,
+      normalizedRole: fingerprint.normalizedRole,
+      status: "active",
+      confidence: candidate.confidence,
+      needsReview: true,
+    };
+  }
+
+  const excerpt = (work.event.text ?? "").trim().slice(0, 500) || null;
+  return {
+    company: null,
+    role: null,
+    locations: [],
+    season: null,
+    year: null,
+    employmentType: null,
+    sponsorshipStatus: "unknown",
+    applicationUrl: null,
+    deadline: null,
+    postedAt: null,
+    sourceUrl: work.event.source_url,
+    descriptionExcerpt: excerpt,
+    evidence: excerpt === null ? {} : { description_excerpt: excerpt },
+    canonicalUrl: null,
+    canonicalUrlHash: null,
+    fingerprint: null,
+    stableJobBoard: null,
+    stableJobId: null,
+    normalizedCompany: null,
+    normalizedRole: null,
+    status: "active",
+    confidence: 0,
+    needsReview: true,
+  };
+}
+
 async function routeToReview(
   pool: Pool,
   work: ProcessingWorkItem,
   input: {
     reviewReasons: ReviewReason[];
     audit: ProcessingAudit;
+    candidate?: OpportunityCandidate | null;
   },
 ): Promise<ProcessNextEventResult> {
-  await completeRawEventWithoutOpportunity(pool, {
+  const opportunity = minimalReviewOpportunity(work, input.candidate ?? null);
+  const persisted = await persistReviewOpportunity(pool, {
     rawEventId: work.rawEventId,
     processingRunId: work.processingRunId,
     leaseToken: work.leaseToken,
-    disposition: "review",
-    reviewReasons: input.reviewReasons,
+    opportunity,
+    observedAt: work.event.captured_at,
     audit: input.audit,
+    reviewReasons: input.reviewReasons,
+    outboxPayload: buildReviewOutboxPayload({
+      opportunity,
+      reviewReasons: input.reviewReasons,
+      excerpt: opportunity.descriptionExcerpt,
+    }),
   });
   return {
     disposition: "review",
     rawEventId: work.rawEventId,
-    opportunityId: null,
-    created: false,
-    outboxCreated: false,
+    opportunityId: persisted.opportunityId,
+    created: persisted.created,
+    outboxCreated: persisted.outboxCreated,
     reviewReasons: input.reviewReasons,
   };
 }
@@ -318,6 +403,7 @@ export async function processWorkItem(
     if (extraction.kind === "review") {
       return routeToReview(pool, work, {
         reviewReasons: extraction.reasons,
+        candidate: null,
         audit: auditFromExtraction({
           method: "deterministic",
           parserVersion: null,
@@ -354,6 +440,7 @@ export async function processWorkItem(
     if (!evidence.valid) {
       return routeToReview(pool, work, {
         reviewReasons: evidence.reviewReasons,
+        candidate: extraction.candidate,
         audit: auditBase,
       });
     }
@@ -391,6 +478,7 @@ export async function processWorkItem(
     if (reviewReasons.length > 0) {
       return routeToReview(pool, work, {
         reviewReasons,
+        candidate: extraction.candidate,
         audit: auditBase,
       });
     }
@@ -407,6 +495,7 @@ export async function processWorkItem(
     if (fuzzyOpportunityId !== null) {
       return routeToReview(pool, work, {
         reviewReasons: ["fuzzy_duplicate"],
+        candidate: extraction.candidate,
         audit: {
           ...auditBase,
           validationOutcome: {

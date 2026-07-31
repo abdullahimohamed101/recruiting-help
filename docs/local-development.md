@@ -25,7 +25,13 @@ Local endpoints bind only to loopback:
 - n8n: http://127.0.0.1:5678
 - PostgreSQL: `127.0.0.1:5432`
 
-`intake-api` and `processor` stay on the Docker network only.
+`intake-api`, `processor`, and `discord-bot` stay on the Docker network only. Start the Discord bot with:
+
+```bash
+corepack pnpm infra:up:discord
+```
+
+after setting Discord token and channel IDs in `.env`.
 
 ## Checks
 
@@ -86,8 +92,7 @@ See [Processing core](processing.md).
 
 ## Current phase boundaries
 
-The repository includes Phase 4 processing (extraction, dedupe, leases, outbox enqueue, WF-03). It does not yet include:
+The repository includes Phase 5 Discord intake/delivery (bot, WF-04, WF-06). It does not yet include:
 
-- Discord destination delivery
-- source collectors
+- source collectors (GitHub / browser)
 - production VPS provisioning

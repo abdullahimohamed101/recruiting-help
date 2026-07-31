@@ -11,3 +11,4 @@ A collection of my personal projects and experiments.
 - [Database and Contracts](docs/database.md)
 - [Signed Unified Ingestion](docs/signed-ingestion.md)
 - [Processing Core](docs/processing.md)
+- [Discord Bot](docs/discord-bot.md)

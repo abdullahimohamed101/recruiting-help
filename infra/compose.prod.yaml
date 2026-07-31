@@ -29,6 +29,8 @@ services:
         condition: service_healthy
       processor:
         condition: service_healthy
+      discord-bot:
+        condition: service_healthy
     environment:
       DB_TYPE: postgresdb
       DB_POSTGRESDB_HOST: postgres
@@ -122,15 +124,31 @@ services:
 
   discord-bot:
     image: ${DISCORD_BOT_IMAGE:-recruiting-help/discord-bot:development}
-    profiles: ["application"]
     depends_on:
-      n8n:
+      postgres:
         condition: service_healthy
     environment:
       NODE_ENV: production
+      DATABASE_URL: ${AGGREGATOR_DATABASE_URL:?Set AGGREGATOR_DATABASE_URL}
       DISCORD_BOT_TOKEN: ${DISCORD_BOT_TOKEN:?Set DISCORD_BOT_TOKEN}
-      INTAKE_HMAC_SECRET: ${INTAKE_HMAC_SECRET:?Set INTAKE_HMAC_SECRET}
-      N8N_INTAKE_URL: http://n8n:5678/webhook/unified-intake
+      DISCORD_GUILD_ID: ${DISCORD_GUILD_ID:?Set DISCORD_GUILD_ID}
+      DISCORD_INTAKE_CHANNEL_ID: ${DISCORD_INTAKE_CHANNEL_ID:?Set DISCORD_INTAKE_CHANNEL_ID}
+      DISCORD_FEED_CHANNEL_ID: ${DISCORD_FEED_CHANNEL_ID:?Set DISCORD_FEED_CHANNEL_ID}
+      DISCORD_REVIEW_CHANNEL_ID: ${DISCORD_REVIEW_CHANNEL_ID:?Set DISCORD_REVIEW_CHANNEL_ID}
+      DISCORD_OPS_CHANNEL_ID: ${DISCORD_OPS_CHANNEL_ID:?Set DISCORD_OPS_CHANNEL_ID}
+      INTAKE_URL: http://n8n:5678/webhook/unified-intake
+      AGGREGATOR_CALLER_ID: ${DISCORD_BOT_CALLER_ID:-discord-bot}
+      AGGREGATOR_CALLER_SECRET: ${DISCORD_BOT_CALLER_SECRET:?Set DISCORD_BOT_CALLER_SECRET}
+      PORT: 3002
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          'node -e "fetch(''http://127.0.0.1:3002/readyz'').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"',
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 12
     mem_limit: 256m
     cpus: 0.25
     restart: unless-stopped

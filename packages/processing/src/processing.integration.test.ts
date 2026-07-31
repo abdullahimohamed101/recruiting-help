@@ -247,14 +247,21 @@ describeWithDatabase("processing integration", () => {
       expect.objectContaining({
         disposition: "review",
         reviewReasons: ["fuzzy_duplicate"],
-        opportunityId: null,
-        outboxCreated: false,
+        created: true,
+        outboxCreated: true,
       }),
     );
-    const outbox = await pool.query<CountRow>(
-      "SELECT count(*)::int AS count FROM aggregator.delivery_outbox",
+    const outbox = await pool.query<{
+      count: number;
+      destination_type: string;
+    }>(
+      `
+        SELECT count(*)::int AS count, max(destination_type) AS destination_type
+        FROM aggregator.delivery_outbox
+      `,
     );
-    expect(outbox.rows[0]?.count).toBe(0);
+    expect(outbox.rows[0]?.count).toBe(1);
+    expect(outbox.rows[0]?.destination_type).toBe("discord_review");
   });
 
   it("stores closed opportunities without enqueueing delivery", async () => {
@@ -345,7 +352,13 @@ describeWithDatabase("processing integration", () => {
     expect(result).toMatchObject({
       disposition: "review",
       reviewReasons: ["invalid_evidence"],
+      created: true,
+      outboxCreated: true,
     });
+    const outbox = await pool.query<{ destination_type: string }>(
+      "SELECT destination_type FROM aggregator.delivery_outbox",
+    );
+    expect(outbox.rows[0]?.destination_type).toBe("discord_review");
   });
 
   it("reclaims expired leases and remains idempotent after retry", async () => {

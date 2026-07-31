@@ -12,6 +12,7 @@
 | Phase 2 — contracts and database          | Complete; pending review/commit | July 30, 2026 |
 | Phase 3 — unified signed ingestion        | Complete; pending review/commit | July 30, 2026 |
 | Phase 4 — processing core                 | Complete; pending review/commit | July 30, 2026 |
+| Phase 5 — Discord destination and intake  | Complete; pending review/commit | July 31, 2026 |
 
 ## 1. How to use this plan
 
@@ -482,18 +483,18 @@ Complete the first end-to-end vertical slice before adding automated source conn
 
 ### Coding-agent work
 
-- [ ] Implement the discord.js bot.
-- [ ] Read fallback submissions from `#opportunity-intake`.
-- [ ] Parse native forwarded-message snapshots.
-- [ ] Send signed raw events to WF-02.
-- [ ] Add status reactions.
-- [ ] Implement WF-04 outbox delivery.
-- [ ] Render safe Discord embeds.
-- [ ] Disable all mentions.
-- [ ] Respect Discord rate limits and `Retry-After`.
-- [ ] Store returned Discord message IDs.
-- [ ] Implement WF-05 review and WF-06 error alerts.
-- [ ] Add a bot health endpoint and graceful shutdown.
+- [x] Implement the discord.js bot.
+- [x] Read fallback submissions from `#opportunity-intake`.
+- [x] Parse native forwarded-message snapshots.
+- [x] Send signed raw events to WF-02.
+- [x] Add status reactions.
+- [x] Implement WF-04 outbox delivery.
+- [x] Render safe Discord embeds.
+- [x] Disable all mentions.
+- [x] Respect Discord rate limits and `Retry-After`.
+- [x] Store returned Discord message IDs.
+- [x] Implement WF-05 review and WF-06 error alerts.
+- [x] Add a bot health endpoint and graceful shutdown.
 
 ### Required manual test
 

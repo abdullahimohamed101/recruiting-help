@@ -1,0 +1,19 @@
+{
+  "name": "@recruiting-help/discord-bot",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "tsx src/main.ts"
+  },
+  "dependencies": {
+    "@recruiting-help/contracts": "workspace:*",
+    "@recruiting-help/database": "workspace:*",
+    "@recruiting-help/discord": "workspace:*",
+    "@recruiting-help/ingestion": "workspace:*",
+    "discord.js": "^14.25.1"
+  },
+  "devDependencies": {
+    "tsx": "^4.23.1"
+  }
+}

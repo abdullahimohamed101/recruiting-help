@@ -66,10 +66,7 @@ services:
     environment:
       NODE_ENV: development
       DATABASE_URL: postgresql://${POSTGRES_USER:-recruiting_help}:${POSTGRES_PASSWORD:-local-development-only}@postgres:5432/${POSTGRES_DB:-recruiting_help}
-      AGGREGATOR_CALLER_ID: ${AGGREGATOR_CALLER_ID:-collector-dev}
-      AGGREGATOR_CALLER_SECRET: ${AGGREGATOR_CALLER_SECRET:-development-only-hmac-secret-replace-before-shared-use}
-      AGGREGATOR_ALLOWED_SOURCES_JSON: >-
-        {"github":["vanshb03/Summer2027-Internships"]}
+      AGGREGATOR_CALLERS_JSON: ${AGGREGATOR_CALLERS_JSON:-{"collector-dev":{"secret":"development-only-hmac-secret-replace-before-shared-use","allowed_sources":{"github":["vanshb03/Summer2027-Internships"]}},"discord-bot-dev":{"secret":"development-only-hmac-secret-replace-before-shared-use","allowed_sources":{"discord_manual":["replace-with-discord-guild-id"],"slack_manual":["discord-intake"],"instagram_manual":["discord-intake"]}}}}
       PORT: 3000
     healthcheck:
       test:
@@ -106,6 +103,42 @@ services:
       interval: 10s
       timeout: 5s
       retries: 12
+    restart: unless-stopped
+
+  discord-bot:
+    profiles: ["discord"]
+    build:
+      context: ..
+      dockerfile: apps/discord-bot/Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+      intake-api:
+        condition: service_healthy
+      n8n:
+        condition: service_healthy
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgresql://${POSTGRES_USER:-recruiting_help}:${POSTGRES_PASSWORD:-local-development-only}@postgres:5432/${POSTGRES_DB:-recruiting_help}
+      DISCORD_BOT_TOKEN: ${DISCORD_BOT_TOKEN:?Set DISCORD_BOT_TOKEN to enable the discord profile}
+      DISCORD_GUILD_ID: ${DISCORD_GUILD_ID:?Set DISCORD_GUILD_ID}
+      DISCORD_INTAKE_CHANNEL_ID: ${DISCORD_INTAKE_CHANNEL_ID:?Set DISCORD_INTAKE_CHANNEL_ID}
+      DISCORD_FEED_CHANNEL_ID: ${DISCORD_FEED_CHANNEL_ID:?Set DISCORD_FEED_CHANNEL_ID}
+      DISCORD_REVIEW_CHANNEL_ID: ${DISCORD_REVIEW_CHANNEL_ID:?Set DISCORD_REVIEW_CHANNEL_ID}
+      DISCORD_OPS_CHANNEL_ID: ${DISCORD_OPS_CHANNEL_ID:?Set DISCORD_OPS_CHANNEL_ID}
+      INTAKE_URL: ${INTAKE_URL:-http://n8n:5678/webhook/unified-intake}
+      AGGREGATOR_CALLER_ID: ${DISCORD_BOT_CALLER_ID:-discord-bot-dev}
+      AGGREGATOR_CALLER_SECRET: ${AGGREGATOR_CALLER_SECRET:-development-only-hmac-secret-replace-before-shared-use}
+      PORT: 3002
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          'node -e "fetch(''http://127.0.0.1:3002/readyz'').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"',
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 18
     restart: unless-stopped
 
 volumes:

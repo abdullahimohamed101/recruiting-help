@@ -22,12 +22,22 @@ export {
   failRawEventProcessing,
   findFuzzyOpportunityCandidates,
   persistProcessedOpportunity,
+  persistReviewOpportunity,
   type FuzzyOpportunityCandidate,
   type PersistProcessedOpportunityResult,
   type PreparedOpportunity,
   type ProcessingAudit,
   type ProcessingWorkItem,
 } from "./processing.js";
+export {
+  DeliveryLeaseLostError,
+  claimNextDelivery,
+  deliveryRetryDelaySeconds,
+  markDeliveryDead,
+  markDeliveryDelivered,
+  markDeliveryRetry,
+  type DeliveryWorkItem,
+} from "./delivery.js";
 
 export function createDatabasePool(
   connectionString: string,
