@@ -1285,7 +1285,7 @@ Track actual cost per accepted opportunity. A useful guardrail is a monthly mode
 
 The Phase 0 baseline is recorded in [Product Requirements](product-requirements.md). Approved choices include:
 
-- internships and co-ops for all 2027 seasons
+- internships, co-ops, and new-grad roles for all recruiting years/seasons (including Fall/Winter 2026 offseason and Summer 2027)
 - United States and remote-US
 - include all sponsorship statuses and tag known restrictions
 - `vanshb03/Summer2027-Internships` on branch `dev`
@@ -1303,7 +1303,7 @@ Remaining phase-specific decisions:
 4. Gemini model selected after extraction evaluation.
 5. Confidence thresholds after representative fixture testing.
 6. Diagnostic screenshot and review-media retention.
-7. Whether to enable `OFFSEASON_README.md` after the primary GitHub parser stabilizes.
+7. ~~Whether to enable `OFFSEASON_README.md`~~ — enabled for Fall/Winter/Spring 2026 offseason coverage.
 
 ## 19. Official references
 

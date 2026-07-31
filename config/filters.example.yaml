@@ -6,6 +6,7 @@ opportunity_scope:
     - co_op
     - new_grad
   exclude_employment_types: []
+  # Includes Summer 2027 README rows and Fall/Winter/Spring 2026 offseason rows.
   years: all
   seasons:
     - spring

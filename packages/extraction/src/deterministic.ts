@@ -42,11 +42,11 @@ function markdownCells(row: string): string[] {
 }
 
 function inferSeason(text: string): OpportunityCandidate["season"] {
-  const value = text.toLowerCase();
-  if (value.includes("spring")) return "spring";
-  if (value.includes("summer")) return "summer";
-  if (value.includes("fall") || value.includes("autumn")) return "fall";
-  if (value.includes("winter")) return "winter";
+  // Allow glued forms like Summer2027; word boundaries avoid "Falls Church" → fall.
+  if (/\bspring(?:20\d{2})?\b/iu.test(text)) return "spring";
+  if (/\bsummer(?:20\d{2})?\b/iu.test(text)) return "summer";
+  if (/\b(?:fall|autumn)(?:20\d{2})?\b/iu.test(text)) return "fall";
+  if (/\bwinter(?:20\d{2})?\b/iu.test(text)) return "winter";
   return null;
 }
 
@@ -54,6 +54,36 @@ function inferYear(text: string): number | null {
   // Match both "2027" and glued forms such as "Summer2027".
   const year = text.match(/(20\d{2})/u)?.[1];
   return year === undefined ? null : Number(year);
+}
+
+function metadataPath(event: RawEvent): string {
+  if (event.source !== "github") {
+    return "";
+  }
+  return event.metadata.path;
+}
+
+export function sourceContextHints(event: RawEvent): string {
+  const path = metadataPath(event);
+  // OFFSEASON file is Spring/Fall/Winter 2026; do not inherit Summer2027 from the repo name.
+  // Only inject the year so season stays null unless the row names one.
+  if (/offseason/iu.test(path)) {
+    return "2026";
+  }
+  return "";
+}
+
+function inferSeasonAndYear(input: {
+  primaryText: string;
+  fallbackText: string;
+}): {
+  season: OpportunityCandidate["season"];
+  year: number | null;
+} {
+  const season =
+    inferSeason(input.primaryText) ?? inferSeason(input.fallbackText);
+  const year = inferYear(input.primaryText) ?? inferYear(input.fallbackText);
+  return { season, year };
 }
 
 function inferPostedAt(value: string, capturedAt: string): string | null {
@@ -173,11 +203,19 @@ function parseMarkdownOpportunity(
   ) {
     return null;
   }
+  const hints = sourceContextHints(event);
   const contextText = [
     sourceText,
+    hints,
     event.source_account,
     JSON.stringify(event.metadata),
   ].join("\n");
+  const primaryText = [sourceText, hints].join("\n");
+  // Offseason rows must not inherit Summer2027 from the repository account name.
+  const fallbackText =
+    hints.length > 0
+      ? ""
+      : [event.source_account, JSON.stringify(event.metadata)].join("\n");
 
   const companyCell = cells[0] ?? "";
   const roleCell = cells[1] ?? "";
@@ -199,8 +237,7 @@ function parseMarkdownOpportunity(
     literalUrls.find((url) => applicationCell.includes(url)) ??
     literalUrls.find((url) => sourceText.includes(url)) ??
     null;
-  const year = inferYear(contextText);
-  const season = inferSeason(contextText);
+  const { year, season } = inferSeasonAndYear({ primaryText, fallbackText });
   const employmentType = inferEmploymentType(contextText);
   const sponsorshipStatus = sponsorshipFromText(contextText);
   const postedAt = inferPostedAt(postedCell, event.captured_at);
@@ -253,11 +290,18 @@ function parseLabeledOpportunity(
   event: RawEvent,
 ): DeterministicExtraction | null {
   const sourceText = event.text ?? "";
+  const hints = sourceContextHints(event);
   const contextText = [
     sourceText,
+    hints,
     event.source_account,
     JSON.stringify(event.metadata),
   ].join("\n");
+  const primaryText = [sourceText, hints].join("\n");
+  const fallbackText =
+    hints.length > 0
+      ? ""
+      : [event.source_account, JSON.stringify(event.metadata)].join("\n");
   const company = labeledValue(sourceText, "company");
   const role = labeledValue(sourceText, "role|position|title");
   if (company === null && role === null) {
@@ -269,8 +313,7 @@ function parseLabeledOpportunity(
       ? []
       : location.split(/\s*;\s*|\s*\/\s*/u).filter(Boolean);
   const applicationUrl = extractEvidenceUrls(event)[0] ?? null;
-  const year = inferYear(contextText);
-  const season = inferSeason(contextText);
+  const { year, season } = inferSeasonAndYear({ primaryText, fallbackText });
   const employmentType = inferEmploymentType(contextText);
   const sponsorshipStatus = sponsorshipFromText(contextText);
   const evidence = evidenceForCandidate({
