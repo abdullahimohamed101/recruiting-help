@@ -63,6 +63,41 @@ describe("deterministic extraction", () => {
     });
   });
 
+  it("uses OFFSEASON path year 2026 and does not inherit Summer2027", () => {
+    const event = makeEvent(
+      "| Mathtech | Web Application Developer Intern 🇺🇸 | Falls Church, VA | [Apply](https://jobs.example.com/offseason-1) | Jul 27 |",
+    );
+    event.source_url =
+      "https://github.com/vanshb03/Summer2027-Internships/blob/dev/OFFSEASON_README.md";
+    event.metadata = {
+      ...event.metadata,
+      path: "OFFSEASON_README.md",
+    };
+    const result = extractDeterministically(event);
+    expect(result?.candidate).toMatchObject({
+      company: "Mathtech",
+      locations: ["Falls Church, VA"],
+      season: null,
+      year: 2026,
+      employment_type: "internship",
+    });
+    expect(validateCandidateEvidence(event, result!.candidate)).toMatchObject({
+      valid: true,
+      missingEvidence: [],
+    });
+  });
+
+  it("keeps explicit Fall 2026 from row text over README Summer2027 context", () => {
+    const event = makeEvent(
+      "| Example Corp | Software Engineering Intern, Fall 2026 | Remote US | [Apply](https://jobs.example.com/fall-2026) | Jul 29 |",
+    );
+    const result = extractDeterministically(event);
+    expect(result?.candidate).toMatchObject({
+      season: "fall",
+      year: 2026,
+    });
+  });
+
   it("preserves unknown fields as null and routes low confidence to review", () => {
     const event = makeEvent(
       "Company: Example Corp\nRole: Software Intern\nApplications are open",

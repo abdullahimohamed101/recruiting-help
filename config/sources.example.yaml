@@ -8,7 +8,7 @@ sources:
   - id: github-vanshb03-summer-2027
     type: github
     enabled: true
-    display_name: Vansh Summer 2027 Internships
+    display_name: Vansh Summer 2027 + Offseason Internships
     repository: vanshb03/Summer2027-Internships
     branch: dev
     files:
@@ -17,7 +17,8 @@ sources:
         enabled: true
       - path: OFFSEASON_README.md
         parser: vanshb03_markdown_table_v1
-        enabled: false
+        # Spring / Fall / Winter 2026 offseason list (same parser as README).
+        enabled: true
     poll_interval_seconds: 900
     shadow_mode: true
     parser_options:

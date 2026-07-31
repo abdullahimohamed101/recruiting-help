@@ -3,6 +3,7 @@ import type {
   RawEvent,
   ReviewReason,
 } from "@recruiting-help/contracts";
+import { sourceContextHints } from "./deterministic.js";
 import { extractEvidenceUrls } from "./urls.js";
 
 export type EvidenceValidation = {
@@ -34,6 +35,7 @@ export function validateCandidateEvidence(
 
   const sourceText = [
     event.text ?? "",
+    sourceContextHints(event),
     event.source_account,
     JSON.stringify(event.metadata),
   ].join("\n");

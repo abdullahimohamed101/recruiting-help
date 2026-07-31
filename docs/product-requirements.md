@@ -78,15 +78,15 @@ If both are absent, status remains `unknown`; do not infer sponsorship.
 
 ### GitHub
 
-| Field               | Value                                              |
-| ------------------- | -------------------------------------------------- |
-| Repository          | `vanshb03/Summer2027-Internships`                  |
-| URL                 | https://github.com/vanshb03/Summer2027-Internships |
-| Default branch      | `dev`                                              |
-| Initial file        | `README.md`                                        |
-| Optional later file | `OFFSEASON_README.md`                              |
-| Poll interval       | 15 minutes                                         |
-| Connector           | Official GitHub REST API with conditional requests |
+| Field          | Value                                                        |
+| -------------- | ------------------------------------------------------------ |
+| Repository     | `vanshb03/Summer2027-Internships`                            |
+| URL            | https://github.com/vanshb03/Summer2027-Internships           |
+| Default branch | `dev`                                                        |
+| Initial file   | `README.md` (Summer 2027)                                    |
+| Offseason file | `OFFSEASON_README.md` (Spring / Fall / Winter 2026; enabled) |
+| Poll interval  | 15 minutes                                                   |
+| Connector      | Official GitHub REST API with conditional requests           |
 
 Observed README schema:
 
@@ -101,7 +101,7 @@ Parser requirements:
 - Extract `🛂`, `🇺🇸`, and `🔒` as structured status markers.
 - Preserve multiple locations.
 - Handle blank application cells.
-- Normalize dates lacking a year to 2027 only when source context proves the year.
+- Normalize dates lacking a year from the source file context (`README.md` → 2027, `OFFSEASON_README.md` → 2026) when the row itself does not name a year.
 - Ignore contributor and navigation sections outside the internship table.
 - Use a stable application URL when present; otherwise derive source identity from normalized row content plus repository/file.
 - Preserve raw row evidence.
@@ -271,4 +271,3 @@ These are intentionally deferred to their implementation phases:
 - Operator-owned Discord server/channel IDs
 - Gemini model selected after extraction evaluation
 - Confidence thresholds based on fixture results
-- Whether `OFFSEASON_README.md` should be enabled after the primary README parser stabilizes
