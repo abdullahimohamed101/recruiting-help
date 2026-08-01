@@ -25,12 +25,12 @@ corepack pnpm process:events -- --limit 10
 
 Every claimed raw event ends in one of:
 
-| Disposition | Meaning                                                                                                |
-| ----------- | ------------------------------------------------------------------------------------------------------ |
+| Disposition | Meaning                                                                                                                                                                                    |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `processed` | Opportunity linked; outbox enqueued only for new active opportunities. Exact duplicates update `last_seen_at` only and (for Discord intake) request a `🔁` reaction via `DISCORD_BOT_URL`. |
-| `ignored`   | Noise or outside product scope                                                                         |
-| `review`    | Needs human review (missing fields, low confidence, fuzzy duplicate, invalid evidence, AI unavailable) |
-| `failed`    | Retriable processing exception with backoff                                                            |
+| `ignored`   | Noise or outside product scope                                                                                                                                                             |
+| `review`    | Needs human review (missing fields, low confidence, fuzzy duplicate, invalid evidence, AI unavailable)                                                                                     |
+| `failed`    | Retriable processing exception with backoff                                                                                                                                                |
 
 Closed opportunities (`🔒`) are stored with status `closed` and do not enqueue delivery.
 

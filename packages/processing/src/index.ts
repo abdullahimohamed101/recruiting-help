@@ -60,9 +60,7 @@ export type ProcessNextEventOptions = {
   /** Fallback Discord channel for manual intake sources that omit channel_id. */
   defaultIntakeChannelId?: string;
   /** Called when an exact opportunity match is linked (no new feed outbox). */
-  onExactDuplicate?: (
-    input: ExactDuplicateNotifyInput,
-  ) => void | Promise<void>;
+  onExactDuplicate?: (input: ExactDuplicateNotifyInput) => void | Promise<void>;
 };
 
 const SNOWFLAKE = /^\d+$/;

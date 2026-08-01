@@ -33,7 +33,8 @@ export async function requestBotMessageReaction(input: {
   } catch (error) {
     return {
       ok: false,
-      error: error instanceof Error ? error.message.slice(0, 200) : "network_error",
+      error:
+        error instanceof Error ? error.message.slice(0, 200) : "network_error",
     };
   }
 }

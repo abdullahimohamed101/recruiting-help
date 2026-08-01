@@ -54,13 +54,13 @@ Allow-list the bot caller for:
 
 ## Intake reactions
 
-| Emoji | Meaning |
-| ----- | ------- |
-| `⏳` | Intake accepted the message and is writing the raw event |
-| `✅` | New raw event stored (not yet “published to feed”) |
-| `♻️` | Same Discord message / intake source identity already stored |
-| `🔁` | Opportunity already in the system (exact dedupe after processing; no new feed post) |
-| `❌` | Intake rejected or failed |
+| Emoji | Meaning                                                                             |
+| ----- | ----------------------------------------------------------------------------------- |
+| `⏳`  | Intake accepted the message and is writing the raw event                            |
+| `✅`  | New raw event stored (not yet “published to feed”)                                  |
+| `♻️`  | Same Discord message / intake source identity already stored                        |
+| `🔁`  | Opportunity already in the system (exact dedupe after processing; no new feed post) |
+| `❌`  | Intake rejected or failed                                                           |
 
 `🔁` is added by the processor via `POST /v1/react` after exact opportunity
 dedupe. Intake cannot know opportunity duplicates up front, so you still see
