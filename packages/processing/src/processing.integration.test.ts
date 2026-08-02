@@ -213,7 +213,7 @@ describeWithDatabase("processing integration", () => {
       "SELECT count(*)::int AS count FROM aggregator.delivery_outbox",
     );
     expect(opportunities.rows[0]?.count).toBe(1);
-    expect(sources.rows[0]?.count).toBe(2);
+    expect(sources.rows[0]?.count).toBe(3);
     expect(outbox.rows[0]?.count).toBe(1);
   });
 
