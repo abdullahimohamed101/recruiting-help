@@ -187,7 +187,7 @@ describe("bot reaction client", () => {
   it("posts /v1/react to the discord-bot", async () => {
     const fetchImpl = vi.fn().mockResolvedValue({
       ok: true,
-      json: async () => ({ ok: true }),
+      json: () => Promise.resolve({ ok: true }),
     });
     await expect(
       requestBotMessageReaction({
@@ -195,7 +195,7 @@ describe("bot reaction client", () => {
         channelId: "1",
         messageId: "2",
         emoji: OPPORTUNITY_DUPLICATE_REACTION,
-        fetchImpl: fetchImpl as unknown as typeof fetch,
+        fetchImpl,
       }),
     ).resolves.toEqual({ ok: true });
     expect(fetchImpl).toHaveBeenCalledWith(
