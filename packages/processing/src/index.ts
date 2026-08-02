@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import type {
   OpportunityCandidate,
   ProcessingDisposition,
+  RawEvent,
   ReviewReason,
 } from "@recruiting-help/contracts";
 import {
@@ -37,6 +38,18 @@ import {
 export const DEFAULT_AUTO_PUBLISH_CONFIDENCE = 0.85;
 export const DEFAULT_FEED_DESTINATION_KEY = "internship-feed";
 
+export type IntakeReactionTarget = {
+  channelId: string;
+  messageId: string;
+};
+
+export type ExactDuplicateNotifyInput = {
+  rawEventId: string;
+  opportunityId: string;
+  channelId: string;
+  messageId: string;
+};
+
 export type ProcessNextEventOptions = {
   provider?: StructuredExtractionProvider | null;
   destinationKey?: string;
@@ -44,7 +57,87 @@ export type ProcessNextEventOptions = {
   resolveRedirects?: boolean;
   leaseSeconds?: number;
   maxAttempts?: number;
+  /** Fallback Discord channel for manual intake sources that omit channel_id. */
+  defaultIntakeChannelId?: string;
+  /** Called when an exact opportunity match is linked (no new feed outbox). */
+  onExactDuplicate?: (input: ExactDuplicateNotifyInput) => void | Promise<void>;
 };
+
+const SNOWFLAKE = /^\d+$/;
+
+/** Resolve Discord intake message coordinates for post-processing reactions. */
+export function discordIntakeReactionTarget(
+  event: RawEvent,
+  options: { defaultIntakeChannelId?: string } = {},
+): IntakeReactionTarget | null {
+  if (event.source === "discord_manual" || event.source === "discord_browser") {
+    return {
+      channelId: event.metadata.channel_id,
+      messageId: event.metadata.message_id,
+    };
+  }
+  if (event.source === "slack_manual") {
+    if (
+      SNOWFLAKE.test(event.metadata.channel_id) &&
+      SNOWFLAKE.test(event.source_event_id)
+    ) {
+      return {
+        channelId: event.metadata.channel_id,
+        messageId: event.source_event_id,
+      };
+    }
+    return null;
+  }
+  if (event.source === "instagram_manual") {
+    const channelId = options.defaultIntakeChannelId;
+    if (
+      channelId !== undefined &&
+      SNOWFLAKE.test(channelId) &&
+      SNOWFLAKE.test(event.source_event_id)
+    ) {
+      return { channelId, messageId: event.source_event_id };
+    }
+    return null;
+  }
+  return null;
+}
+
+async function notifyExactDuplicateIfNeeded(
+  work: ProcessingWorkItem,
+  persisted: { opportunityId: string; created: boolean },
+  options: ProcessNextEventOptions,
+): Promise<void> {
+  if (persisted.created || options.onExactDuplicate === undefined) {
+    return;
+  }
+  const target = discordIntakeReactionTarget(
+    work.event,
+    options.defaultIntakeChannelId === undefined
+      ? {}
+      : { defaultIntakeChannelId: options.defaultIntakeChannelId },
+  );
+  if (target === null) {
+    return;
+  }
+  try {
+    await options.onExactDuplicate({
+      rawEventId: work.rawEventId,
+      opportunityId: persisted.opportunityId,
+      channelId: target.channelId,
+      messageId: target.messageId,
+    });
+  } catch (error) {
+    console.error(
+      JSON.stringify({
+        level: "warn",
+        event: "exact_duplicate_notify_failed",
+        raw_event_id: work.rawEventId,
+        opportunity_id: persisted.opportunityId,
+        detail: error instanceof Error ? error.message : "unknown",
+      }),
+    );
+  }
+}
 
 export type ProcessNextEventResult =
   | {
@@ -550,6 +643,8 @@ export async function processWorkItem(
       outboxPayload: buildOutboxPayload(opportunity),
       enqueueOutbox: opportunity.status === "active",
     });
+
+    await notifyExactDuplicateIfNeeded(work, persisted, options);
 
     return {
       disposition: "processed",

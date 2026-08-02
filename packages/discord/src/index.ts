@@ -24,5 +24,10 @@ export {
   type DiscordHttpRequest,
   type DiscordHttpResponse,
   type DiscordPublishResult,
+  type DiscordReactionResult,
   type DiscordRestPublisher,
 } from "./publisher.js";
+export {
+  OPPORTUNITY_DUPLICATE_REACTION,
+  requestBotMessageReaction,
+} from "./bot-client.js";

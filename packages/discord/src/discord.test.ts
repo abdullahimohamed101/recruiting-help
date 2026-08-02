@@ -7,6 +7,8 @@ import {
   createDiscordRestPublisher,
   discordBotPermissionBits,
   escapeDiscordMarkdown,
+  OPPORTUNITY_DUPLICATE_REACTION,
+  requestBotMessageReaction,
 } from "./index.js";
 
 describe("discord markdown safety", () => {
@@ -162,5 +164,50 @@ describe("REST publisher", () => {
         allowed_mentions: { parse: [] },
       }),
     ).resolves.toEqual({ kind: "permanent", detail: "discord_400" });
+  });
+
+  it("adds message reactions via PUT", async () => {
+    const request = vi.fn().mockResolvedValue({ status: 204, body: null });
+    const publisher = createDiscordRestPublisher({ request });
+    await expect(
+      publisher.addMessageReaction({
+        channelId: "111",
+        messageId: "222",
+        emoji: OPPORTUNITY_DUPLICATE_REACTION,
+      }),
+    ).resolves.toEqual({ kind: "ok" });
+    expect(request).toHaveBeenCalledWith({
+      method: "PUT",
+      path: `/channels/111/messages/222/reactions/${encodeURIComponent(OPPORTUNITY_DUPLICATE_REACTION)}/@me`,
+    });
+  });
+});
+
+describe("bot reaction client", () => {
+  it("posts /v1/react to the discord-bot", async () => {
+    const fetchImpl = vi.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ ok: true }),
+    });
+    await expect(
+      requestBotMessageReaction({
+        botBaseUrl: "http://discord-bot:3002/",
+        channelId: "1",
+        messageId: "2",
+        emoji: OPPORTUNITY_DUPLICATE_REACTION,
+        fetchImpl,
+      }),
+    ).resolves.toEqual({ ok: true });
+    expect(fetchImpl).toHaveBeenCalledWith(
+      "http://discord-bot:3002/v1/react",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({
+          channel_id: "1",
+          message_id: "2",
+          emoji: OPPORTUNITY_DUPLICATE_REACTION,
+        }),
+      }),
+    );
   });
 });

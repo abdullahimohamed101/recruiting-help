@@ -15,6 +15,13 @@ describe("canonicalizeApplicationUrl", () => {
         "https://Jobs.Example.com/opening/?utm_source=discord&gh_jid=123&b=2&a=1#apply",
       ),
     ).toBe("https://jobs.example.com/opening?a=1&b=2&gh_jid=123");
+    expect(
+      canonicalizeApplicationUrl(
+        "https://ats.rippling.com/rippling/jobs/82c13e8f-ae96-4c60-a872-c0ddf9eb0781?jobSite=LinkedIn",
+      ),
+    ).toBe(
+      "https://ats.rippling.com/rippling/jobs/82c13e8f-ae96-4c60-a872-c0ddf9eb0781",
+    );
   });
 
   it("rejects insecure or credential-bearing URLs", () => {

@@ -19,11 +19,32 @@ export type DiscordPublishResult =
       detail: string;
     };
 
+export type DiscordReactionResult =
+  | { kind: "ok" }
+  | {
+      kind: "rate_limited";
+      retryAfterSeconds: number;
+      detail: string;
+    }
+  | {
+      kind: "retryable";
+      detail: string;
+    }
+  | {
+      kind: "permanent";
+      detail: string;
+    };
+
 export interface DiscordRestPublisher {
   sendChannelMessage(
     channelId: string,
     payload: DiscordMessagePayload,
   ): Promise<DiscordPublishResult>;
+  addMessageReaction(input: {
+    channelId: string;
+    messageId: string;
+    emoji: string;
+  }): Promise<DiscordReactionResult>;
 }
 
 export type DiscordHttpResponse = {
@@ -33,9 +54,9 @@ export type DiscordHttpResponse = {
 };
 
 export type DiscordHttpRequest = (input: {
-  method: "POST";
+  method: "POST" | "PUT";
   path: string;
-  body: DiscordMessagePayload;
+  body?: DiscordMessagePayload;
 }) => Promise<DiscordHttpResponse>;
 
 function asRecord(value: unknown): Record<string, unknown> | null {
@@ -43,6 +64,37 @@ function asRecord(value: unknown): Record<string, unknown> | null {
     return null;
   }
   return value as Record<string, unknown>;
+}
+
+function mapStatusToReactionResult(
+  response: DiscordHttpResponse,
+): DiscordReactionResult {
+  if (response.status === 204 || response.status === 200) {
+    return { kind: "ok" };
+  }
+  if (response.status === 429) {
+    return {
+      kind: "rate_limited",
+      retryAfterSeconds: response.retryAfterSeconds ?? 30,
+      detail: "rate_limited",
+    };
+  }
+  if (response.status >= 500) {
+    return {
+      kind: "retryable",
+      detail: `discord_${response.status}`,
+    };
+  }
+  if (response.status >= 400) {
+    return {
+      kind: "permanent",
+      detail: `discord_${response.status}`,
+    };
+  }
+  return {
+    kind: "retryable",
+    detail: `discord_${response.status}`,
+  };
 }
 
 export function createDiscordRestPublisher(input: {
@@ -90,6 +142,24 @@ export function createDiscordRestPublisher(input: {
           kind: "retryable",
           detail: `discord_${response.status}`,
         };
+      } catch (error) {
+        return {
+          kind: "retryable",
+          detail:
+            error instanceof Error
+              ? error.message.slice(0, 200)
+              : "network_error",
+        };
+      }
+    },
+    async addMessageReaction({ channelId, messageId, emoji }) {
+      try {
+        const encoded = encodeURIComponent(emoji);
+        const response = await input.request({
+          method: "PUT",
+          path: `/channels/${channelId}/messages/${messageId}/reactions/${encoded}/@me`,
+        });
+        return mapStatusToReactionResult(response);
       } catch (error) {
         return {
           kind: "retryable",

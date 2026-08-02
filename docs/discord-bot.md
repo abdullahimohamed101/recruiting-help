@@ -52,6 +52,20 @@ Allow-list the bot caller for:
 - `discord_manual` → owned guild ID
 - `slack_manual` / `instagram_manual` → `discord-intake` (prefix overrides from intake)
 
+## Intake reactions
+
+| Emoji | Meaning                                                                             |
+| ----- | ----------------------------------------------------------------------------------- |
+| `⏳`  | Intake accepted the message and is writing the raw event                            |
+| `✅`  | New raw event stored (not yet “published to feed”)                                  |
+| `♻️`  | Same Discord message / intake source identity already stored                        |
+| `🔁`  | Opportunity already in the system (exact dedupe after processing; no new feed post) |
+| `❌`  | Intake rejected or failed                                                           |
+
+`🔁` is added by the processor via `POST /v1/react` after exact opportunity
+dedupe. Intake cannot know opportunity duplicates up front, so you still see
+`✅` first, then `🔁` once WF-03 / processing links the existing opportunity.
+
 ## Runtime endpoints
 
 Private Docker network only:
@@ -60,6 +74,7 @@ Private Docker network only:
 - `GET /readyz`
 - `POST /v1/deliver-batch`
 - `POST /v1/ops-alert`
+- `POST /v1/react` (`channel_id`, `message_id`, `emoji`)
 
 ## Manual verification
 
@@ -67,9 +82,10 @@ Private Docker network only:
 2. Confirm `⏳`, then `✅`.
 3. Run processing + delivery (WF-03 / WF-04 or CLI) and confirm one feed message.
 4. Submit the same text again (same Discord message is a new event; for duplicate source identity, resend an identical signed event or re-process an exact URL duplicate path).
-5. Confirm duplicate source intake shows `♻️` when the same Discord message id is retried through intake, and exact opportunity URL duplicates do not create a second feed outbox row.
-6. Submit an incomplete item.
-7. Confirm it appears in `#aggregator-review`, not the feed.
+5. Confirm duplicate source intake shows `♻️` when the same Discord message id is retried through intake.
+6. Paste a job URL that already exists as an opportunity; confirm `✅` then `🔁`, and no second feed outbox row.
+7. Submit an incomplete item.
+8. Confirm it appears in `#aggregator-review`, not the feed.
 
 URL-only pastes are first-class. Drop a job link (Ashby, SmartRecruiters, Lever,
 Greenhouse, Rippling, etc.) and the bot will store it. Processing fetches the

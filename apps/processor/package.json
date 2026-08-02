@@ -8,6 +8,7 @@
   },
   "dependencies": {
     "@recruiting-help/database": "workspace:*",
+    "@recruiting-help/discord": "workspace:*",
     "@recruiting-help/extraction": "workspace:*",
     "@recruiting-help/processing": "workspace:*"
   },
