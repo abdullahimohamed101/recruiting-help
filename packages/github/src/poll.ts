@@ -11,13 +11,9 @@ import {
   type Pool,
 } from "@recruiting-help/database";
 import { fetchGithubFileContent } from "./client.js";
-import { expectedTableHeaders, type GithubSourceConfig } from "./config.js";
-import {
-  buildGithubRawEvents,
-  observationKeysForRows,
-  parseVanshb03MarkdownSnapshot,
-  VANSHB03_MARKDOWN_TABLE_V1,
-} from "./snapshot.js";
+import { mergeParserOptions, type GithubSourceConfig } from "./config.js";
+import { getSnapshotParser } from "./parsers.js";
+import { buildGithubRawEvents, observationKeysForRows } from "./snapshot.js";
 
 export type PollFileResult = {
   sourceId: string;
@@ -98,7 +94,8 @@ export async function pollGithubSource(input: {
     if (!file.enabled) {
       continue;
     }
-    if (file.parser !== VANSHB03_MARKDOWN_TABLE_V1) {
+    const parser = getSnapshotParser(file.parser);
+    if (parser === null) {
       results.push({
         sourceId: input.source.id,
         path: file.path,
@@ -182,9 +179,9 @@ export async function pollGithubSource(input: {
       continue;
     }
 
-    const snapshot = parseVanshb03MarkdownSnapshot({
+    const snapshot = parser.parse({
       markdown: fetchResult.content,
-      expectedHeaders: expectedTableHeaders(input.source),
+      parserOptions: mergeParserOptions(input.source, file),
     });
     if (snapshot.kind === "drift") {
       await markSourceFailure(input.pool, {

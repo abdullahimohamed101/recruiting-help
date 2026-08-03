@@ -1,6 +1,10 @@
 import { createHash } from "node:crypto";
 import { RawEventSchema, type RawEvent } from "@recruiting-help/contracts";
 
+/** Generic markdown internship table parser (column layout via options). */
+export const MARKDOWN_TABLE_V1 = "markdown_table_v1";
+
+/** Vansh Summer2027 table layout (Company/Role/Location/Application/Date). */
 export const VANSHB03_MARKDOWN_TABLE_V1 = "vanshb03_markdown_table_v1";
 
 export type SnapshotRow = {
@@ -22,6 +26,15 @@ export type SnapshotParseResult =
       detail: string;
       headers: string[];
     };
+
+export type MarkdownTableParserOptions = {
+  expectedHeaders?: string[] | null;
+  inheritedCompanyMarker?: string;
+  minColumns?: number;
+  companyColumn?: number;
+  roleColumn?: number;
+  applicationColumn?: number;
+};
 
 function splitCells(row: string): string[] {
   const cells: string[] = [];
@@ -79,10 +92,18 @@ export function observationKeyForRow(input: {
   return `row:${digest}`;
 }
 
-export function parseVanshb03MarkdownSnapshot(input: {
+export function parseMarkdownTableSnapshot(input: {
   markdown: string;
-  expectedHeaders?: string[] | null;
+  options?: MarkdownTableParserOptions;
 }): SnapshotParseResult {
+  const options = input.options ?? {};
+  const expectedHeaders = options.expectedHeaders ?? null;
+  const inheritedMarker = options.inheritedCompanyMarker ?? "↳";
+  const minColumns = options.minColumns ?? 5;
+  const companyColumn = options.companyColumn ?? 0;
+  const roleColumn = options.roleColumn ?? 1;
+  const applicationColumn = options.applicationColumn ?? 3;
+
   const lines = input.markdown.split(/\r?\n/u);
   let headerCells: string[] | null = null;
   const rows: SnapshotRow[] = [];
@@ -95,7 +116,7 @@ export function parseVanshb03MarkdownSnapshot(input: {
       continue;
     }
     const cells = splitCells(trimmed);
-    if (cells.length < 5) {
+    if (cells.length < minColumns) {
       continue;
     }
     if (cells.every((cell) => /^:?-{3,}:?$/u.test(cell))) {
@@ -103,11 +124,8 @@ export function parseVanshb03MarkdownSnapshot(input: {
     }
     if (headerCells === null) {
       headerCells = cells;
-      if (
-        input.expectedHeaders !== undefined &&
-        input.expectedHeaders !== null
-      ) {
-        const expected = input.expectedHeaders.map(normalizeHeader);
+      if (expectedHeaders !== null && expectedHeaders.length > 0) {
+        const expected = expectedHeaders.map(normalizeHeader);
         const actual = headerCells.map(normalizeHeader);
         const matches =
           expected.length === actual.length &&
@@ -123,11 +141,11 @@ export function parseVanshb03MarkdownSnapshot(input: {
       continue;
     }
 
-    const companyCell = cells[0] ?? "";
-    const roleCell = cells[1] ?? "";
-    const applicationCell = cells[3] ?? "";
+    const companyCell = cells[companyColumn] ?? "";
+    const roleCell = cells[roleColumn] ?? "";
+    const applicationCell = cells[applicationColumn] ?? "";
     let company: string | null;
-    if (companyCell === "↳") {
+    if (companyCell === inheritedMarker) {
       company = previousCompany;
     } else if (companyCell.trim().length === 0) {
       company = null;
@@ -162,6 +180,27 @@ export function parseVanshb03MarkdownSnapshot(input: {
   }
 
   return { kind: "ok", rows, headers: headerCells };
+}
+
+/** Compatibility wrapper; prefer the parser registry in new code. */
+export function parseVanshb03MarkdownSnapshot(input: {
+  markdown: string;
+  expectedHeaders?: string[] | null;
+}): SnapshotParseResult {
+  const options: MarkdownTableParserOptions = {
+    inheritedCompanyMarker: "↳",
+    minColumns: 5,
+    companyColumn: 0,
+    roleColumn: 1,
+    applicationColumn: 3,
+  };
+  if (input.expectedHeaders !== undefined) {
+    options.expectedHeaders = input.expectedHeaders;
+  }
+  return parseMarkdownTableSnapshot({
+    markdown: input.markdown,
+    options,
+  });
 }
 
 export function buildGithubRawEvents(input: {
