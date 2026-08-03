@@ -1,6 +1,6 @@
 # Local development
 
-Local services are temporary development dependencies. Production runs continuously on the VPS described in the [design](internship-opportunity-aggregator-design.md).
+Local services are temporary development dependencies. Production runs continuously on the VPS described in the [design](internship-opportunity-aggregator-design.md) and [VPS foundation](vps-foundation.md) runbook (Phase 7).
 
 ## Requirements
 
