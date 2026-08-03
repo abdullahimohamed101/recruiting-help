@@ -92,7 +92,10 @@ See [Processing core](processing.md).
 
 ## Current phase boundaries
 
-The repository includes Phase 5 Discord intake/delivery (bot, WF-04, WF-06). It does not yet include:
+The repository includes Phase 5 Discord intake/delivery (bot, WF-04 feed+review,
+WF-06). Review uses the `discord_review` outbox via WF-04 (no separate WF-05).
+
+It does not yet include:
 
 - source collectors (GitHub / browser)
 - production VPS provisioning

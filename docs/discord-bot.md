@@ -76,16 +76,17 @@ Private Docker network only:
 - `POST /v1/ops-alert`
 - `POST /v1/react` (`channel_id`, `message_id`, `emoji`)
 
-## Manual verification
+## Manual verification (Phase 5 exit)
 
-1. Paste a fake opportunity into `#opportunity-intake`.
-2. Confirm `⏳`, then `✅`.
-3. Run processing + delivery (WF-03 / WF-04 or CLI) and confirm one feed message.
-4. Submit the same text again (same Discord message is a new event; for duplicate source identity, resend an identical signed event or re-process an exact URL duplicate path).
-5. Confirm duplicate source intake shows `♻️` when the same Discord message id is retried through intake.
-6. Paste a job URL that already exists as an opportunity; confirm `✅` then `🔁`, and no second feed outbox row.
-7. Submit an incomplete item.
-8. Confirm it appears in `#aggregator-review`, not the feed.
+Full checklist lives in
+[project phases — Phase 5](internship-aggregator-project-phases.md#10-phase-5--discord-destination-and-manual-fallback-intake).
+
+Short path:
+
+1. Paste a **new** job URL into `#opportunity-intake` → `⏳` then `✅`.
+2. Confirm one lean feed message in `#internship-feed`.
+3. Paste the same URL again → `✅` then `🔁`, no second feed post.
+4. Submit an incomplete item → `#aggregator-review` only.
 
 URL-only pastes are first-class. Drop a job link (Ashby, SmartRecruiters, Lever,
 Greenhouse, Rippling, etc.) and the bot will store it. Processing fetches the
