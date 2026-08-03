@@ -63,12 +63,19 @@ function normalizeHeader(value: string): string {
 }
 
 function extractUrl(cell: string): string | null {
+  const href = cell.match(/href\s*=\s*["'](https?:\/\/[^"'\s]+)["']/iu)?.[1];
+  if (href !== undefined) {
+    return href;
+  }
   const markdown = cell.match(/\((https?:\/\/[^)\s]+)\)/u)?.[1];
   if (markdown !== undefined) {
     return markdown;
   }
-  const bare = cell.match(/https?:\/\/[^\s<>)|]+/u)?.[0];
-  return bare ?? null;
+  const bare = cell.match(/https?:\/\/[^\s<>)|"'\\]+/u)?.[0];
+  if (bare === undefined) {
+    return null;
+  }
+  return bare.replace(/[.,;:]+$/u, "");
 }
 
 export function observationKeyForRow(input: {

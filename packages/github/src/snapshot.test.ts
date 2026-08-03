@@ -141,6 +141,41 @@ describe("vanshb03 markdown snapshot parser", () => {
     });
   });
 
+  it("extracts URLs from HTML anchors without trailing quotes", () => {
+    const markdown = `
+| Company | Role | Location | Application/Link | Date Posted |
+| --- | --- | --- | --- | --- |
+| Point72 | Quantitative Developer Intern | New York, NY | <a href="https://careers.point72.com/CSJobDetail?jobCode=CSS-0012293&utm_source=github-vansh-ouckah">Apply</a> | Jul 30 |
+| Aquatic | Software Engineer Intern | Chicago, IL | <a href='https://job-boards.greenhouse.io/embed/job_app?token=8489233002'>Apply</a> | Jul 29 |
+`;
+    const parsed = parseVanshb03MarkdownSnapshot({
+      markdown,
+      expectedHeaders,
+    });
+    expect(parsed.kind).toBe("ok");
+    if (parsed.kind !== "ok") {
+      return;
+    }
+    expect(parsed.rows[0]?.applicationUrl).toBe(
+      "https://careers.point72.com/CSJobDetail?jobCode=CSS-0012293&utm_source=github-vansh-ouckah",
+    );
+    expect(parsed.rows[1]?.applicationUrl).toBe(
+      "https://job-boards.greenhouse.io/embed/job_app?token=8489233002",
+    );
+    const events = buildGithubRawEvents({
+      repository: "vanshb03/Summer2027-Internships",
+      branch: "dev",
+      path: "README.md",
+      commitSha: "a".repeat(40),
+      capturedAt: "2026-08-03T00:00:00.000Z",
+      rows: parsed.rows,
+    });
+    expect(events[0]?.source_event_id.endsWith('"')).toBe(false);
+    expect(events[0]?.source_event_id).toBe(
+      "https://careers.point72.com/CSJobDetail?jobCode=CSS-0012293&utm_source=github-vansh-ouckah",
+    );
+  });
+
   it("dedupes observation keys for identical locked/no-URL rows", () => {
     const markdown = `
 | Company | Role | Location | Application/Link | Date Posted |
