@@ -47,6 +47,7 @@ export async function resetTestDatabase(
       aggregator.delivery_outbox,
       aggregator.processing_runs,
       aggregator.opportunity_sources,
+      aggregator.source_observations,
       aggregator.opportunities,
       aggregator.raw_events,
       aggregator.connector_health,

@@ -67,6 +67,7 @@ describeWithDatabase("database integration", () => {
       await rollbackAllForDevelopment(pool, { confirmDestructive: true }),
     ).toEqual([
       "0004_delivery_leases",
+      "0005_github_observations",
       "0003_expand_employment_types",
       "0002_processing_core",
       "0001_initial_schema",
@@ -76,6 +77,7 @@ describeWithDatabase("database integration", () => {
       "0002_processing_core",
       "0003_expand_employment_types",
       "0004_delivery_leases",
+      "0005_github_observations",
     ]);
     expect(await migrateToLatest(pool)).toEqual([]);
 

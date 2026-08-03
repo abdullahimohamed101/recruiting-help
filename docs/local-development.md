@@ -92,10 +92,12 @@ See [Processing core](processing.md).
 
 ## Current phase boundaries
 
-The repository includes Phase 5 Discord intake/delivery (bot, WF-04 feed+review,
-WF-06). Review uses the `discord_review` outbox via WF-04 (no separate WF-05).
+The repository includes Phase 5 Discord intake/delivery and Phase 6 GitHub
+polling (`github-poller`, WF-01, fixtures). Review uses the `discord_review`
+outbox via WF-04 (no separate WF-05). GitHub sources default to `shadow_mode:
+true` (store/process, no Discord delivery) until you flip the flag.
 
 It does not yet include:
 
-- source collectors (GitHub / browser)
+- browser collectors (Discord / Instagram / Slack)
 - production VPS provisioning

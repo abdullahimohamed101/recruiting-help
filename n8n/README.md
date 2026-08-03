@@ -18,6 +18,7 @@ Rules:
 
 Implemented:
 
+- `WF-01 GitHub Poll` → `http://github-poller:3003/v1/poll-github`
 - `WF-02 Unified Signed Intake`
 - `WF-03 Process Raw Events`
 - `WF-04 Deliver Discord Outbox` (feed **and** review; Phase 5 has no separate WF-05)

@@ -407,6 +407,7 @@ async function routeToReview(
       reviewReasons: input.reviewReasons,
       excerpt,
     }),
+    enqueueOutbox: !work.shadowMode,
   });
   return {
     disposition: "review",
@@ -641,7 +642,7 @@ export async function processWorkItem(
       audit: auditBase,
       destinationKey,
       outboxPayload: buildOutboxPayload(opportunity),
-      enqueueOutbox: opportunity.status === "active",
+      enqueueOutbox: opportunity.status === "active" && !work.shadowMode,
     });
 
     await notifyExactDuplicateIfNeeded(work, persisted, options);

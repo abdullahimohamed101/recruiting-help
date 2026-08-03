@@ -118,6 +118,31 @@ services:
       retries: 12
     restart: unless-stopped
 
+  github-poller:
+    build:
+      context: ..
+      dockerfile: apps/github-poller/Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgresql://${POSTGRES_USER:-recruiting_help}:${POSTGRES_PASSWORD:-local-development-only}@postgres:5432/${POSTGRES_DB:-recruiting_help}
+      PORT: 3003
+      SOURCES_CONFIG_PATH: config/sources.example.yaml
+      GITHUB_TOKEN: ${GITHUB_TOKEN:-}
+      GITHUB_POLL_JITTER_MS: ${GITHUB_POLL_JITTER_MS:-5000}
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          'node -e "fetch(''http://127.0.0.1:3003/readyz'').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"',
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    restart: unless-stopped
+
   discord-bot:
     profiles: ["discord"]
     build:
