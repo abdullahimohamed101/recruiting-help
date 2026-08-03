@@ -126,6 +126,34 @@ services:
       - backend
       - egress
 
+  github-poller:
+    image: ${GITHUB_POLLER_IMAGE:-recruiting-help/github-poller:development}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: ${AGGREGATOR_DATABASE_URL:?Set AGGREGATOR_DATABASE_URL}
+      PORT: 3003
+      SOURCES_CONFIG_PATH: ${SOURCES_CONFIG_PATH:-config/sources.example.yaml}
+      GITHUB_TOKEN: ${GITHUB_TOKEN:-}
+      GITHUB_POLL_JITTER_MS: ${GITHUB_POLL_JITTER_MS:-5000}
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          'node -e "fetch(''http://127.0.0.1:3003/readyz'').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"',
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 12
+    mem_limit: 256m
+    cpus: 0.25
+    restart: unless-stopped
+    networks:
+      - backend
+      - egress
+
   discord-bot:
     image: ${DISCORD_BOT_IMAGE:-recruiting-help/discord-bot:development}
     depends_on:

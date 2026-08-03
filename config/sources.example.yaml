@@ -4,6 +4,11 @@ version: 1
 # Copy it to sources.yaml for local development. Never add credentials,
 # cookies, session data, browser profiles, or webhook secrets.
 
+# Add internship inputs as separate `sources` entries.
+# GitHub: set type: github, pick a registered parser id, keep secrets out of YAML.
+# Built-in parsers: vanshb03_markdown_table_v1, markdown_table_v1
+# (see docs/github-connector.md → Adding internship inputs).
+
 sources:
   - id: github-vanshb03-summer-2027
     type: github
@@ -33,6 +38,26 @@ sources:
         "🛂": does_not_offer
         "🇺🇸": us_citizenship_required
       closed_marker: "🔒"
+
+  # Example: add another GitHub internship list without code changes when the
+  # table shape matches markdown_table_v1 / vanshb03_markdown_table_v1.
+  # - id: github-another-internships
+  #   type: github
+  #   enabled: false
+  #   display_name: Another Internship List
+  #   repository: org/repo
+  #   branch: main
+  #   files:
+  #     - path: README.md
+  #       parser: markdown_table_v1
+  #       enabled: true
+  #       parser_options:
+  #         table_headers: [Company, Role, Location, Application/Link, Date Posted]
+  #         company_column: 0
+  #         role_column: 1
+  #         application_column: 3
+  #   poll_interval_seconds: 900
+  #   shadow_mode: true
 
   - id: discord-opportunities-primary
     type: discord_browser

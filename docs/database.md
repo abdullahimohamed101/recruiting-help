@@ -18,13 +18,14 @@ Unknown extracted opportunity values remain `null`. They are not inferred or rep
 
 ## Schema
 
-Migration `0001_initial_schema` creates the `aggregator` schema. Migration `0002_processing_core` adds processing leases, stable job-board identity, normalized fuzzy-match helpers, and processing-run review fields. Migration `0003_expand_employment_types` allows `new_grad` alongside `internship` and `co_op`. Migration `0004_delivery_leases` adds delivery outbox lease tokens for Discord publishing.
+Migration `0001_initial_schema` creates the `aggregator` schema. Migration `0002_processing_core` adds processing leases, stable job-board identity, normalized fuzzy-match helpers, and processing-run review fields. Migration `0003_expand_employment_types` allows `new_grad` alongside `internship` and `co_op`. Migration `0004_delivery_leases` adds delivery outbox lease tokens for Discord publishing. Migration `0005_github_observations` adds `possibly_removed` opportunity status and per-source observation tracking for two-poll closure.
 
 | Table                 | Responsibility                                               |
 | --------------------- | ------------------------------------------------------------ |
 | `source_configs`      | Non-secret connector configuration                           |
 | `source_cursors`      | ETags and source checkpoints                                 |
 | `connector_health`    | Current adapter state and safe diagnostics                   |
+| `source_observations` | Per-source seen keys for removal / closure                   |
 | `raw_events`          | Immutable source-event payload boundary and processing state |
 | `opportunities`       | Canonical normalized opportunities                           |
 | `opportunity_sources` | Many-source evidence links                                   |

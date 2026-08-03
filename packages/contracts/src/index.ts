@@ -158,6 +158,7 @@ export const OpportunityStatusSchema = z.enum([
   "closed",
   "duplicate",
   "rejected",
+  "possibly_removed",
 ]);
 export const DeliveryStatusSchema = z.enum([
   "pending",

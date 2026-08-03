@@ -38,6 +38,17 @@ export {
   markDeliveryRetry,
   type DeliveryWorkItem,
 } from "./delivery.js";
+export {
+  getSourceCursor,
+  isSourceShadowMode,
+  markSourceFailure,
+  markSourceSuccess,
+  saveSourceCursor,
+  syncSourceObservations,
+  upsertGithubSourceConfig,
+  type SourceConfigRecord,
+  type SourceCursorRecord,
+} from "./sources.js";
 
 export function createDatabasePool(
   connectionString: string,

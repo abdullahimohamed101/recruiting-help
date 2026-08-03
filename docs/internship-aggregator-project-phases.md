@@ -12,7 +12,8 @@
 | Phase 2 — contracts and database          | Complete; pending review/commit | July 30, 2026  |
 | Phase 3 — unified signed ingestion        | Complete; pending review/commit | July 30, 2026  |
 | Phase 4 — processing core                 | Complete; pending review/commit | July 30, 2026  |
-| Phase 5 — Discord destination and intake  | Coding complete; operator smoke | August 3, 2026 |
+| Phase 5 — Discord destination and intake  | Complete                        | August 3, 2026 |
+| Phase 6 — GitHub connector                | In progress                     | August 3, 2026 |
 
 ## 1. How to use this plan
 
@@ -515,7 +516,7 @@ Run with Compose `--profile discord` and WF-02 / WF-03 / WF-04 / WF-06 published
 ### Exit criteria
 
 - [x] Coding: ingest → process → dedupe → outbox → Discord path implemented and covered by automated tests.
-- [ ] Operator: required manual test above passes on your owned guild.
+- [x] Operator: required manual test above passes on your owned guild.
 - Duplicate retries do not duplicate feed messages (`🔁` / `♻️` semantics).
 - Errors appear in `#aggregator-ops` without secrets.
 
@@ -538,16 +539,16 @@ Implement the first reliable automated source and validate it through fixtures a
 
 ### Coding-agent work
 
-- [ ] Build WF-01 conditional GitHub polling.
-- [ ] Persist ETags/blob SHAs and source health.
-- [ ] Implement the first repository-specific parser.
-- [ ] Add real, versioned fixtures.
-- [ ] Parse complete current snapshots.
-- [ ] Advance cursors only after durable event insertion.
-- [ ] Add polling jitter and rate-limit handling.
-- [ ] Detect parser/schema drift.
-- [ ] Implement two-observation removal/closure logic.
-- [ ] Add shadow mode that stores but does not deliver.
+- [x] Build WF-01 conditional GitHub polling.
+- [x] Persist ETags/blob SHAs and source health.
+- [x] Implement the first repository-specific parser (`vanshb03_markdown_table_v1`).
+- [x] Add real, versioned fixtures under `packages/test-fixtures/github/`.
+- [x] Parse complete current snapshots.
+- [x] Advance cursors only after durable event insertion.
+- [x] Add polling jitter and rate-limit handling.
+- [x] Detect parser/schema drift (disable source + health alert).
+- [x] Implement two-observation removal/closure logic (`possibly_removed` → `closed`).
+- [x] Add shadow mode that stores but does not deliver.
 
 ### Required tests
 

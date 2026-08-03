@@ -18,6 +18,8 @@ export type ProcessingWorkItem = {
   leaseToken: string;
   attemptCount: number;
   event: RawEvent;
+  sourceConfigId: string | null;
+  shadowMode: boolean;
 };
 
 export type ProcessingAudit = {
@@ -94,6 +96,7 @@ export async function claimNextRawEvent(
       id: string;
       payload: unknown;
       attempt_count: number;
+      source_config_id: string | null;
     }>(
       `
         WITH candidate AS (
@@ -124,7 +127,7 @@ export async function claimNextRawEvent(
           last_error_detail = NULL
         FROM candidate
         WHERE event.id = candidate.id
-        RETURNING event.id, event.payload, event.attempt_count
+        RETURNING event.id, event.payload, event.attempt_count, event.source_config_id
       `,
       [maxAttempts, leaseSeconds, leaseToken],
     );
@@ -146,12 +149,27 @@ export async function claimNextRawEvent(
       throw new Error("Processing-run insert returned no row.");
     }
 
+    let shadowMode = false;
+    if (row.source_config_id !== null) {
+      const shadow = await client.query<{ shadow: boolean }>(
+        `
+          SELECT COALESCE((config->>'shadow_mode')::boolean, false) AS shadow
+          FROM aggregator.source_configs
+          WHERE id = $1
+        `,
+        [row.source_config_id],
+      );
+      shadowMode = shadow.rows[0]?.shadow === true;
+    }
+
     return {
       rawEventId: row.id,
       processingRunId,
       leaseToken,
       attemptCount: row.attempt_count,
       event: RawEventSchema.parse(row.payload),
+      sourceConfigId: row.source_config_id,
+      shadowMode,
     };
   });
 }
@@ -492,6 +510,7 @@ export async function persistReviewOpportunity(
     reviewReasons: ReviewReason[];
     destinationKey?: string;
     outboxPayload: Record<string, unknown>;
+    enqueueOutbox?: boolean;
   },
 ): Promise<PersistProcessedOpportunityResult> {
   return withTransaction(pool, async (client) => {
@@ -502,12 +521,16 @@ export async function persistReviewOpportunity(
       status: "active",
     };
     const opportunity = await createOpportunity(client, reviewOpportunity);
-    const delivery = await enqueueDelivery(client, {
-      opportunityId: opportunity.id,
-      destinationType: "discord_review",
-      destinationKey: input.destinationKey ?? "aggregator-review",
-      payload: input.outboxPayload,
-    });
+    let outboxCreated = false;
+    if (input.enqueueOutbox !== false) {
+      const delivery = await enqueueDelivery(client, {
+        opportunityId: opportunity.id,
+        destinationType: "discord_review",
+        destinationKey: input.destinationKey ?? "aggregator-review",
+        payload: input.outboxPayload,
+      });
+      outboxCreated = delivery.inserted;
+    }
     await linkOpportunitySource(client, {
       opportunityId: opportunity.id,
       rawEventId: input.rawEventId,
@@ -538,7 +561,7 @@ export async function persistReviewOpportunity(
     return {
       opportunityId: opportunity.id,
       created: true,
-      outboxCreated: delivery.inserted,
+      outboxCreated,
     };
   });
 }

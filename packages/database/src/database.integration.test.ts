@@ -66,6 +66,7 @@ describeWithDatabase("database integration", () => {
     expect(
       await rollbackAllForDevelopment(pool, { confirmDestructive: true }),
     ).toEqual([
+      "0005_github_observations",
       "0004_delivery_leases",
       "0003_expand_employment_types",
       "0002_processing_core",
@@ -76,6 +77,7 @@ describeWithDatabase("database integration", () => {
       "0002_processing_core",
       "0003_expand_employment_types",
       "0004_delivery_leases",
+      "0005_github_observations",
     ]);
     expect(await migrateToLatest(pool)).toEqual([]);
 
@@ -94,6 +96,7 @@ describeWithDatabase("database integration", () => {
       "raw_events",
       "source_configs",
       "source_cursors",
+      "source_observations",
       "webhook_nonces",
     ]);
   });

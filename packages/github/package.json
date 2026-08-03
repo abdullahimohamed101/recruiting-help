@@ -1,0 +1,15 @@
+{
+  "name": "@recruiting-help/github",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@recruiting-help/contracts": "workspace:*",
+    "@recruiting-help/database": "workspace:*",
+    "yaml": "^2.8.2",
+    "zod": "^4.4.3"
+  }
+}
