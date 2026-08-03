@@ -62,16 +62,16 @@ public repos at lower limits.
 
 ## Behavior
 
-| Case                   | Result                                            |
-| ---------------------- | ------------------------------------------------- |
-| `304 Not Modified`     | Update health / `last_success_at` only            |
-| `200` changed          | Parse full snapshot → insert rows → save ETag/SHA |
+| Case                   | Result                                             |
+| ---------------------- | -------------------------------------------------- |
+| `304 Not Modified`     | Update health / `last_success_at` only             |
+| `200` changed          | Parse full snapshot → insert rows → save ETag/SHA  |
 | Persist failure        | Cursor **not** advanced; CLI `detail` has DB error |
-| Duplicate locked rows  | Observation keys deduped (same URL/row hash)      |
-| Header drift           | Source disabled + `selector_broken` health        |
-| Rate limit             | `rate_limited` health; cursor preserved           |
-| Missing from one poll  | Opportunity → `possibly_removed`                  |
-| Missing from two polls | Opportunity → `closed`                            |
+| Duplicate locked rows  | Observation keys deduped (same URL/row hash)       |
+| Header drift           | Source disabled + `selector_broken` health         |
+| Rate limit             | `rate_limited` health; cursor preserved            |
+| Missing from one poll  | Opportunity → `possibly_removed`                   |
+| Missing from two polls | Opportunity → `closed`                             |
 
 Shadow mode is toggled in source config (`shadow_mode: false`) without code
 changes. Continuous 48-hour shadow validation is deferred to Phase 7 (VPS).
