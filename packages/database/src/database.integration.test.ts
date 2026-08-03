@@ -96,6 +96,7 @@ describeWithDatabase("database integration", () => {
       "raw_events",
       "source_configs",
       "source_cursors",
+      "source_observations",
       "webhook_nonces",
     ]);
   });
