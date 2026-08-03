@@ -13,7 +13,8 @@
 | Phase 3 — unified signed ingestion        | Complete; pending review/commit | July 30, 2026  |
 | Phase 4 — processing core                 | Complete; pending review/commit | July 30, 2026  |
 | Phase 5 — Discord destination and intake  | Complete                        | August 3, 2026 |
-| Phase 6 — GitHub connector                | In progress                     | August 3, 2026 |
+| Phase 6 — GitHub connector                | Complete                        | August 3, 2026 |
+| Phase 7 — VPS foundation                  | In progress                     |                |
 
 ## 1. How to use this plan
 
@@ -532,10 +533,10 @@ Implement the first reliable automated source and validate it through fixtures a
 
 ### Your work
 
-- [ ] Confirm the repository, branch, and target file.
+- [x] Confirm the repository, branch, and target file.
 - [ ] Create a fine-grained read-only GitHub token if higher limits are needed.
-- [ ] Use a test credential locally if required; production credentials wait for Phase 7.
-- [ ] Compare controlled output with the source.
+- [x] Use a test credential locally if required; production credentials wait for Phase 7.
+- [x] Compare controlled output with the source.
 
 ### Coding-agent work
 
@@ -600,63 +601,63 @@ Create the private, always-on production runtime before beginning multi-day brow
 
 ### Coding-agent work — host bootstrap
 
-- [ ] Produce an idempotent bootstrap script or Ansible playbook.
-- [ ] Apply operating-system updates.
-- [ ] Create a non-root deployment user.
-- [ ] Require SSH keys and disable password SSH.
+- [x] Produce an idempotent bootstrap script or Ansible playbook.
+- [x] Apply operating-system updates.
+- [x] Create a non-root deployment user.
+- [x] Require SSH keys and disable password SSH.
 - [ ] Install and join Tailscale with your authorization.
-- [ ] Configure a default-deny firewall.
+- [x] Configure a default-deny firewall.
 - [ ] Restrict SSH to Tailscale where practical.
-- [ ] Install Docker Engine and Compose.
-- [ ] Configure log rotation and time synchronization.
-- [ ] Create 2 GB swap with conservative swappiness.
-- [ ] Configure automatic security updates.
-- [ ] Document provider-console recovery access.
+- [x] Install Docker Engine and Compose.
+- [x] Configure log rotation and time synchronization.
+- [x] Create 2 GB swap with conservative swappiness.
+- [x] Configure automatic security updates.
+- [x] Document provider-console recovery access.
 
 ### Coding-agent work — production Compose
 
-- [ ] Finalize `compose.prod.yaml` for:
+- [x] Finalize `compose.prod.yaml` for:
   - PostgreSQL
   - n8n Community Edition
   - Discord bot
   - collector/controller
   - backup job
 - [ ] Pin images and application versions.
-- [ ] Add `unless-stopped` restart policies.
-- [ ] Add health checks.
+- [x] Add `unless-stopped` restart policies.
+- [x] Add health checks.
 - [ ] Add non-root execution where supported.
-- [ ] Add resource limits and reservations.
-- [ ] Create internal-only Docker networks.
-- [ ] Ensure Postgres is not host-published.
-- [ ] Bind n8n only to a private/loopback interface.
-- [ ] Create named volumes:
+- [x] Add resource limits and reservations.
+- [x] Create internal-only Docker networks.
+- [x] Ensure Postgres is not host-published.
+- [x] Bind n8n only to a private/loopback interface.
+- [x] Create named volumes:
   - `postgres_data`
   - `n8n_data`
   - `browser_profiles`
   - `temporary_diagnostics`
-- [ ] Add safe deployment, migration, status, log, and rollback scripts.
+- [x] Add safe deployment, migration, status, log, and rollback scripts.
 
 ### Coding-agent work — private administration
 
-- [ ] Document accessing n8n through Tailscale.
+- [x] Document accessing n8n through Tailscale.
 - [ ] Implement an on-demand headed Playwright/noVNC administration profile.
 - [ ] Bind noVNC only to the Tailscale/private interface.
 - [ ] Require a temporary strong access credential.
 - [ ] Provide explicit start, stop, and verification commands.
 - [ ] Ensure noVNC is stopped outside authentication sessions.
-- [ ] Confirm no domain or public reverse proxy is required.
+- [x] Confirm no domain or public reverse proxy is required.
 
 ### Coding-agent work — backup
 
-- [ ] Implement nightly encrypted Postgres logical backups.
+- [x] Implement nightly encrypted Postgres logical backups.
 - [ ] Keep seven daily and four weekly backups.
-- [ ] Upload to the independent backup destination.
-- [ ] Store `N8N_ENCRYPTION_KEY` separately from database backups.
-- [ ] Version-control n8n workflows, not credential values.
-- [ ] Exclude browser profiles from backups.
+- [x] Upload to the independent backup destination.
+- [x] Store `N8N_ENCRYPTION_KEY` separately from database backups.
+- [x] Version-control n8n workflows, not credential values.
+- [x] Exclude browser profiles from backups.
 - [ ] Add diagnostic-media cleanup.
 - [ ] Add backup success/failure alerts.
-- [ ] Create a restoration script and runbook.
+- [x] Create a restoration script and runbook.
 
 ### Resource verification
 

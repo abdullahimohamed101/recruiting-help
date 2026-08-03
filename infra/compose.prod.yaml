@@ -15,6 +15,7 @@ services:
       timeout: 5s
       retries: 12
     mem_limit: 512m
+    mem_reservation: 256m
     cpus: 0.5
     restart: unless-stopped
     networks:
@@ -64,6 +65,7 @@ services:
       timeout: 5s
       retries: 12
     mem_limit: 768m
+    mem_reservation: 384m
     cpus: 0.75
     restart: unless-stopped
     networks:
@@ -90,6 +92,7 @@ services:
       timeout: 5s
       retries: 12
     mem_limit: 256m
+    mem_reservation: 128m
     cpus: 0.25
     restart: unless-stopped
     networks:
@@ -120,6 +123,7 @@ services:
       timeout: 5s
       retries: 12
     mem_limit: 384m
+    mem_reservation: 192m
     cpus: 0.5
     restart: unless-stopped
     networks:
@@ -135,9 +139,11 @@ services:
       NODE_ENV: production
       DATABASE_URL: ${AGGREGATOR_DATABASE_URL:?Set AGGREGATOR_DATABASE_URL}
       PORT: 3003
-      SOURCES_CONFIG_PATH: ${SOURCES_CONFIG_PATH:-config/sources.example.yaml}
+      SOURCES_CONFIG_PATH: ${SOURCES_CONFIG_PATH:-/config/sources.yaml}
       GITHUB_TOKEN: ${GITHUB_TOKEN:-}
       GITHUB_POLL_JITTER_MS: ${GITHUB_POLL_JITTER_MS:-5000}
+    volumes:
+      - ${SOURCES_CONFIG_HOST_PATH:-../config/sources.example.yaml}:/config/sources.yaml:ro
     healthcheck:
       test:
         [
@@ -148,6 +154,7 @@ services:
       timeout: 5s
       retries: 12
     mem_limit: 256m
+    mem_reservation: 128m
     cpus: 0.25
     restart: unless-stopped
     networks:
@@ -182,8 +189,47 @@ services:
       timeout: 5s
       retries: 12
     mem_limit: 256m
+    mem_reservation: 128m
     cpus: 0.25
     restart: unless-stopped
+    networks:
+      - backend
+      - egress
+
+  backup:
+    image: postgres:17
+    profiles: ["backup"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:?Set POSTGRES_USER}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:?Set POSTGRES_DB}
+      BACKUP_ENCRYPTION_PASSPHRASE: ${BACKUP_ENCRYPTION_PASSPHRASE:?Set BACKUP_ENCRYPTION_PASSPHRASE}
+      BACKUP_LOCAL_DIR: /var/backups/recruiting-help
+      BACKUP_KEEP: ${BACKUP_KEEP:-11}
+      BACKUP_UPLOAD: ${BACKUP_UPLOAD:-0}
+      BACKUP_BUCKET: ${BACKUP_BUCKET:-}
+      BACKUP_ENDPOINT: ${BACKUP_ENDPOINT:-}
+      BACKUP_ACCESS_KEY_ID: ${BACKUP_ACCESS_KEY_ID:-}
+      BACKUP_SECRET_ACCESS_KEY: ${BACKUP_SECRET_ACCESS_KEY:-}
+    volumes:
+      - ./backup:/work:ro
+      - backup_data:/var/backups/recruiting-help
+    working_dir: /work
+    entrypoint: ["/bin/bash", "-lc"]
+    command:
+      - |
+        set -euo pipefail
+        apt-get update -qq
+        DEBIAN_FRONTEND=noninteractive apt-get install -y -qq gnupg >/dev/null
+        if [ "$${BACKUP_UPLOAD}" = "1" ]; then
+          DEBIAN_FRONTEND=noninteractive apt-get install -y -qq awscli >/dev/null
+        fi
+        /work/backup-postgres.sh
+    mem_limit: 256m
+    mem_reservation: 128m
+    cpus: 0.25
+    restart: "no"
     networks:
       - backend
       - egress
@@ -207,6 +253,7 @@ services:
       - temporary_diagnostics:/var/lib/recruiting-help/diagnostics
     shm_size: 1gb
     mem_limit: 2g
+    mem_reservation: 512m
     cpus: 1.5
     restart: unless-stopped
     networks:
@@ -218,6 +265,7 @@ volumes:
   n8n_data:
   browser_profiles:
   temporary_diagnostics:
+  backup_data:
 
 networks:
   backend:
