@@ -66,8 +66,8 @@ describeWithDatabase("database integration", () => {
     expect(
       await rollbackAllForDevelopment(pool, { confirmDestructive: true }),
     ).toEqual([
-      "0004_delivery_leases",
       "0005_github_observations",
+      "0004_delivery_leases",
       "0003_expand_employment_types",
       "0002_processing_core",
       "0001_initial_schema",
