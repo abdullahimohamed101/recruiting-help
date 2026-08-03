@@ -140,4 +140,30 @@ describe("vanshb03 markdown snapshot parser", () => {
       detail: "table_headers_mismatch",
     });
   });
+
+  it("dedupes observation keys for identical locked/no-URL rows", () => {
+    const markdown = `
+| Company | Role | Location | Application/Link | Date Posted |
+| --- | --- | --- | --- | --- |
+| Defense Co | Software Engineer Intern | Chantilly, VA | 🔒 | May 22 |
+| ↳ | Software Engineer Intern | Chantilly, VA | 🔒 | May 22 |
+| ↳ | Software Engineer Intern | Chantilly, VA | 🔒 | May 22 |
+`;
+    const parsed = parseVanshb03MarkdownSnapshot({
+      markdown,
+      expectedHeaders,
+    });
+    expect(parsed.kind).toBe("ok");
+    if (parsed.kind !== "ok") {
+      return;
+    }
+    expect(parsed.rows).toHaveLength(3);
+    const keys = observationKeysForRows({
+      repository: "vanshb03/Summer2027-Internships",
+      path: "README.md",
+      rows: parsed.rows,
+    });
+    expect(keys).toHaveLength(2);
+    expect(new Set(keys).size).toBe(keys.length);
+  });
 });

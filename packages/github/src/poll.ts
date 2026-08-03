@@ -253,14 +253,15 @@ export async function pollGithubSource(input: {
       await client.query("COMMIT");
     } catch (error) {
       await client.query("ROLLBACK");
+      const errorDetail =
+        error instanceof Error
+          ? error.message.replace(/\s+/gu, " ").slice(0, 180)
+          : "unknown_error";
       await markSourceFailure(input.pool, {
         sourceConfigId: sourceConfig.id,
         state: "stale",
         detailCode: "persist_failed",
-        detail:
-          error instanceof Error
-            ? error.message.slice(0, 200)
-            : "persist_failed",
+        detail: `${file.path}:${errorDetail}`,
       });
       results.push({
         sourceId: input.source.id,
@@ -268,7 +269,7 @@ export async function pollGithubSource(input: {
         disposition: "error",
         insertedCount: 0,
         duplicateCount: 0,
-        detail: "persist_failed",
+        detail: `persist_failed:${errorDetail}`,
       });
       continue;
     } finally {

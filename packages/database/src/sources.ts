@@ -255,8 +255,11 @@ export async function syncSourceObservations(
 ): Promise<{ possiblyRemoved: string[]; closed: string[] }> {
   const possiblyRemoved: string[] = [];
   const closed: string[] = [];
+  // Postgres rejects ON CONFLICT DO UPDATE when the same key appears twice in
+  // one INSERT (common for identical locked/no-URL rows in internship tables).
+  const seenKeys = [...new Set(input.seenKeys)];
 
-  if (input.seenKeys.length > 0) {
+  if (seenKeys.length > 0) {
     await database.query(
       `
         INSERT INTO aggregator.source_observations (
@@ -273,7 +276,7 @@ export async function syncSourceObservations(
           consecutive_misses = 0,
           updated_at = now()
       `,
-      [input.sourceConfigId, input.observedAt, input.seenKeys],
+      [input.sourceConfigId, input.observedAt, seenKeys],
     );
   }
 
@@ -293,7 +296,7 @@ export async function syncSourceObservations(
         )
       RETURNING observation_key, consecutive_misses
     `,
-    [input.sourceConfigId, input.seenKeys],
+    [input.sourceConfigId, seenKeys],
   );
 
   for (const row of missed.rows) {

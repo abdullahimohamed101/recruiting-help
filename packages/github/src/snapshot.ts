@@ -247,7 +247,7 @@ export function observationKeysForRows(input: {
   path: string;
   rows: SnapshotRow[];
 }): string[] {
-  return input.rows.map((row) =>
+  const keys = input.rows.map((row) =>
     observationKeyForRow({
       repository: input.repository,
       path: input.path,
@@ -255,4 +255,5 @@ export function observationKeysForRows(input: {
       applicationUrl: row.applicationUrl,
     }),
   );
+  return [...new Set(keys)];
 }
