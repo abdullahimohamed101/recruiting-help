@@ -109,11 +109,14 @@ When a browser connector is unhealthy:
 
 The bot reacts to the intake message:
 
-- `⏳` accepted for processing.
-- `✅` published.
-- `♻️` already seen.
-- `❓` needs review because required information could not be established.
-- `❌` processing failed; the original intake remains available for retry.
+- `⏳` intake is storing the raw event.
+- `✅` new raw event stored (not yet “published to feed”).
+- `♻️` same Discord message / intake source identity already stored.
+- `🔁` opportunity already in the system (exact dedupe after processing; no new feed post).
+- `❌` intake rejected or failed.
+
+Incomplete or ambiguous items are not marked with a special intake emoji; they are
+delivered to `#aggregator-review` via the `discord_review` outbox.
 
 ### Feed message
 
@@ -202,8 +205,8 @@ flowchart TD
 | WF-01 GitHub Poller          | Schedule every 15 minutes                  | Efficiently detect repository changes and insert raw source events                                        |
 | WF-02 Unified Intake Webhook | Authenticated webhook                      | Preserve exact bytes and proxy internally for verified, idempotent persistence                            |
 | WF-03 Process Raw Event      | Schedule every minute or sub-workflow call | Claim raw events, extract candidates, normalize, dedupe, and enqueue delivery                             |
-| WF-04 Deliver Discord Outbox | Schedule every 30 seconds                  | Post pending alerts and record Discord message IDs                                                        |
-| WF-05 Human Review Queue     | Called by processor                        | Publish incomplete/ambiguous items to a review channel                                                    |
+| WF-04 Deliver Discord Outbox | Schedule every 30 seconds                  | Post pending feed and review outbox rows; record Discord message IDs                                      |
+| WF-05 Human Review Queue     | _(folded into WF-04)_                      | MVP: processor enqueues `discord_review`; WF-04 delivers to `#aggregator-review` (no separate n8n WF)     |
 | WF-06 Error Handler          | n8n Error Trigger                          | Report failures with execution links and safe metadata                                                    |
 | WF-07 Reconciliation         | Hourly and daily                           | Recover stuck jobs, retry due deliveries, and detect stale connectors                                     |
 | WF-08 Notion Sync            | Future schedule/outbox                     | Upsert accepted opportunities into Notion                                                                 |
@@ -714,6 +717,10 @@ Retry schedule: 30 seconds, 2 minutes, 10 minutes, 1 hour, then every 6 hours up
 ```
 
 ### WF-05: review workflow
+
+**MVP implementation:** there is no separate n8n WF-05. The processor creates a
+`needs_review` opportunity and enqueues `destination_type = discord_review`.
+WF-04 (`Deliver Discord Outbox`) posts that payload to `#aggregator-review`.
 
 Items go to `#aggregator-review` when:
 

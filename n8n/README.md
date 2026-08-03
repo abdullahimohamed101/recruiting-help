@@ -20,5 +20,8 @@ Implemented:
 
 - `WF-02 Unified Signed Intake`
 - `WF-03 Process Raw Events`
-- `WF-04 Deliver Discord Outbox`
+- `WF-04 Deliver Discord Outbox` (feed **and** review; Phase 5 has no separate WF-05)
 - `WF-06 Error Handler`
+
+Review items are `discord_review` outbox rows delivered by WF-04 to
+`#aggregator-review`. Do not expect a `wf-05-*.json` export in this repo.

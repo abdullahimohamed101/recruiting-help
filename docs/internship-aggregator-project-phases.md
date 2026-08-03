@@ -5,14 +5,14 @@
 
 ### Execution status
 
-| Phase                                     | Status                          | Completed     |
-| ----------------------------------------- | ------------------------------- | ------------- |
-| Phase 0 — decisions and prerequisites     | Complete                        | July 29, 2026 |
-| Phase 1 — repository and local foundation | Complete; pending review/commit | July 29, 2026 |
-| Phase 2 — contracts and database          | Complete; pending review/commit | July 30, 2026 |
-| Phase 3 — unified signed ingestion        | Complete; pending review/commit | July 30, 2026 |
-| Phase 4 — processing core                 | Complete; pending review/commit | July 30, 2026 |
-| Phase 5 — Discord destination and intake  | Complete; pending review/commit | July 31, 2026 |
+| Phase                                     | Status                          | Completed      |
+| ----------------------------------------- | ------------------------------- | -------------- |
+| Phase 0 — decisions and prerequisites     | Complete                        | July 29, 2026  |
+| Phase 1 — repository and local foundation | Complete; pending review/commit | July 29, 2026  |
+| Phase 2 — contracts and database          | Complete; pending review/commit | July 30, 2026  |
+| Phase 3 — unified signed ingestion        | Complete; pending review/commit | July 30, 2026  |
+| Phase 4 — processing core                 | Complete; pending review/commit | July 30, 2026  |
+| Phase 5 — Discord destination and intake  | Coding complete; operator smoke | August 3, 2026 |
 
 ## 1. How to use this plan
 
@@ -487,29 +487,36 @@ Complete the first end-to-end vertical slice before adding automated source conn
 - [x] Read fallback submissions from `#opportunity-intake`.
 - [x] Parse native forwarded-message snapshots.
 - [x] Send signed raw events to WF-02.
-- [x] Add status reactions.
-- [x] Implement WF-04 outbox delivery.
-- [x] Render safe Discord embeds.
+- [x] Add status reactions (`⏳` / `✅` / `♻️` / `🔁` / `❌`).
+- [x] Implement WF-04 outbox delivery (feed + review destinations).
+- [x] Render safe Discord embeds (lean feed + review).
 - [x] Disable all mentions.
 - [x] Respect Discord rate limits and `Retry-After`.
 - [x] Store returned Discord message IDs.
-- [x] Implement WF-05 review and WF-06 error alerts.
+- [x] Route review items via `discord_review` outbox (WF-05 folded into WF-04; no separate n8n workflow).
+- [x] Implement WF-06 error alerts.
 - [x] Add a bot health endpoint and graceful shutdown.
+- [x] Exact opportunity duplicates react `🔁` on the intake message after processing.
 
 ### Required manual test
 
-1. Paste a fake opportunity into intake.
-2. Confirm `⏳`, then `✅`.
-3. Confirm one feed message.
-4. Submit it again.
-5. Confirm `♻️` and no second feed post.
-6. Submit an incomplete item.
-7. Confirm it appears in review, not the feed.
+Run with Compose `--profile discord` and WF-02 / WF-03 / WF-04 / WF-06 published.
+
+1. Paste a **new** job URL into `#opportunity-intake`.
+2. Confirm `⏳`, then `✅` (not `🔁` yet).
+3. Confirm **one** lean message in `#internship-feed` (type · location · work mode; Posted/About when known).
+4. Paste the **same URL again** as a new message.
+5. Confirm `✅`, then `🔁`, and **no** second feed post.
+6. (Optional) Retry the exact same Discord message through intake → expect `♻️`.
+7. Submit an incomplete item (no usable company/role/link).
+8. Confirm it appears in `#aggregator-review`, not the feed.
+9. Force a workflow failure (or use a known bad path) and confirm `#aggregator-ops` gets a sanitized alert with no secrets.
 
 ### Exit criteria
 
-- The complete ingest → process → dedupe → outbox → Discord path works.
-- Duplicate retries do not duplicate feed messages.
+- [x] Coding: ingest → process → dedupe → outbox → Discord path implemented and covered by automated tests.
+- [ ] Operator: required manual test above passes on your owned guild.
+- Duplicate retries do not duplicate feed messages (`🔁` / `♻️` semantics).
 - Errors appear in `#aggregator-ops` without secrets.
 
 ### Suggested vibe-coding prompt
